@@ -112,10 +112,45 @@ addContactForm.addEventListener('submit', async (event) => {
 
 
 /**
- * Placeholder function for logging an interaction.
+ * Logs an interaction for a specific contact.
  */
-const logInteraction = (contactId) => {
-    alert(`This will log an interaction for contact ID: ${contactId}`);
+const logInteraction = async (contactId) => {
+    // 1. Ask the user for notes using a simple popup prompt.
+    const notes = prompt("Enter notes for this interaction (e.g., 'Met for coffee, discussed trip to Italy'):");
+
+    // 2. If the user entered notes (and didn't click cancel)
+    if (notes) {
+        // 3. Save the new interaction to the 'interactions' table.
+        const { error: interactionError } = await supabaseClient
+            .from('interactions')
+            .insert({
+                contact_id: contactId,
+                notes: notes
+            });
+        
+        if (interactionError) {
+            console.error('Error logging interaction:', interactionError);
+            alert('Failed to log interaction.');
+            return;
+        }
+
+        // 4. Update the 'last_contact_date' for the contact in the 'contacts' table.
+        const today = new Date().toISOString().split('T')[0]; // Gets today's date as 'YYYY-MM-DD'
+        const { error: updateError } = await supabaseClient
+            .from('contacts')
+            .update({ last_contact_date: today })
+            .eq('id', contactId);
+
+        if (updateError) {
+            console.error('Error updating last contact date:', updateError);
+            alert('Failed to update contact date.');
+            return;
+        }
+        
+        // 5. Refresh the entire table to show the new date.
+        alert('Interaction logged successfully!');
+        fetchContacts();
+    }
 };
 
 
