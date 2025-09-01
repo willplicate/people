@@ -5,7 +5,8 @@ const SUPABASE_URL = 'https://tdclhoimzksmqmnsaccw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkY2xob2ltemtzbXFtbnNhY2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NzAxMjUsImV4cCI6MjA3MjI0NjEyNX0.lkxHRLuT4liiDJWt4AnSk24rFY5E3sceyApZ7kVTGL4';
 
 // Initialize the Supabase client
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// FIX: Renamed the variable to 'supabaseClient' to avoid conflict
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // DOM elements
 const contactsTableBody = document.getElementById('contacts-tbody');
@@ -20,7 +21,8 @@ const fetchContacts = async () => {
     // Clear the table first
     contactsTableBody.innerHTML = '';
 
-    const { data: contacts, error } = await supabase
+    // FIX: Used 'supabaseClient' to make the database call
+    const { data: contacts, error } = await supabaseClient
         .from('contacts')
         .select('*')
         .order('last_contact_date', { ascending: true, nullsFirst: true });
@@ -76,7 +78,7 @@ const fetchContacts = async () => {
 
 
 /**
- * Handles the submission of the "Add Contact" form.
+ * Handles the submission of the "Add Contact" form. (This includes the frequency dropdown)
  */
 addContactForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -86,15 +88,18 @@ addContactForm.addEventListener('submit', async (event) => {
     const phone = document.getElementById('phone').value;
     const email = document.getElementById('email').value;
     const birthday = document.getElementById('birthday').value;
+    const contactFrequency = document.getElementById('contact-frequency').value;
 
-    const { error } = await supabase
+    // FIX: Used 'supabaseClient' to insert data
+    const { error } = await supabaseClient
         .from('contacts')
         .insert({
             full_name: fullName,
             relationship: relationship,
             phone: phone,
             email: email,
-            birthday: birthday || null, // Insert null if empty
+            birthday: birthday || null,
+            contact_frequency: contactFrequency,
         });
 
     if (error) {
@@ -105,13 +110,12 @@ addContactForm.addEventListener('submit', async (event) => {
     }
 });
 
+
 /**
  * Placeholder function for logging an interaction.
- * We will build this out next.
  */
 const logInteraction = (contactId) => {
     alert(`This will log an interaction for contact ID: ${contactId}`);
-    // In the next step, we will replace this with a form/popup.
 };
 
 
