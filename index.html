@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal CRM</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Personal CRM</h1>
+
+        <h2>Add New Contact</h2>
+        <form id="add-contact-form">
+            <input type="text" id="full-name" placeholder="Full Name" required>
+            <input type="text" id="relationship" placeholder="Relationship (e.g., Family)">
+            <input type="text" id="phone" placeholder="Phone Number">
+            <input type="email" id="email" placeholder="Email Address">
+            <label for="birthday">Birthday:</label>
+            <input type="date" id="birthday">
+            <button type="submit">Add Contact</button>
+        </form>
+
+        <h2>My Contacts</h2>
+        <table id="contacts-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Relationship</th>
+                    <th>Last Contact</th>
+                    <th>Birthday</th>
+                    <th>Contact Info</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="contacts-tbody">
+                </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+</body>
+</html>
