@@ -1,8 +1,8 @@
 // -------------------
 // IMPORTANT: REPLACE WITH YOUR SUPABASE CREDENTIALS
 // -------------------
-const SUPABASE_URL = 'https://tdclhoimzksmqmnsaccw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkY2xob2ltemtzbXFtbnNhY2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NzAxMjUsImV4cCI6MjA3MjI0NjEyNX0.lkxHRLuT4liiDJWt4AnSk24rFY5E3sceyApZ7kVTGL4';
+const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Make sure this is correct
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Make sure this is correct
 
 // Initialize the Supabase client
 // FIX: Renamed the variable to 'supabaseClient' to avoid conflict
