@@ -11,15 +11,26 @@
         <h1>Personal CRM</h1>
 
         <h2>Add New Contact</h2>
-        <form id="add-contact-form">
-            <input type="text" id="full-name" placeholder="Full Name" required>
-            <input type="text" id="relationship" placeholder="Relationship (e.g., Family)">
-            <input type="text" id="phone" placeholder="Phone Number">
-            <input type="email" id="email" placeholder="Email Address">
-            <label for="birthday">Birthday:</label>
-            <input type="date" id="birthday">
-            <button type="submit">Add Contact</button>
-        </form>
+      <form id="add-contact-form">
+    <input type="text" id="full-name" placeholder="Full Name" required>
+    <input type="text" id="relationship" placeholder="Relationship">
+    <input type="text" id="phone" placeholder="Phone Number">
+    <input type="email" id="email" placeholder="Email Address">
+    
+    <select id="contact-frequency" required>
+        <option value="" disabled selected>Select Frequency...</option>
+        <option value="Weekly">Weekly</option>
+        <option value="BiWeekly">Bi-Weekly</option>
+        <option value="Monthly">Monthly</option>
+        <option value="Quarterly">Quarterly</option>
+        <option value="Annually">Annually</option>
+    </select>
+
+    <label for="birthday">Birthday:</label>
+    <input type="date" id="birthday">
+
+    <button type="submit">Add Contact</button>
+</form>
 
         <h2>My Contacts</h2>
         <table id="contacts-table">
