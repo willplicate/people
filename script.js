@@ -64,14 +64,18 @@ const fetchContacts = async () => {
             }
         }
         
-        row.innerHTML = `
-            <td>${contact.full_name}</td>
-            <td>${contact.relationship || ''}</td>
-            <td>${contact.last_contact_date || 'Never'}</td>
-            <td>${birthdayDisplay}</td>
-            <td>${contact.phone || ''}<br>${contact.email || ''}</td>
-            <td><button onclick="logInteraction('${contact.id}')">Log Interaction</button></td>
-        `;
+        // This is inside the fetchContacts function in script.js
+row.innerHTML = `
+    <td>${contact.full_name}</td>
+    <td>${contact.relationship || ''}</td>
+    <td>${contact.last_contact_date || 'Never'}</td>
+    <td>${birthdayDisplay}</td>
+    <td>${contact.phone || ''}<br>${contact.email || ''}</td>
+    <td>
+        <button onclick="logInteraction('${contact.id}')">Log</button>
+        <button onclick="viewLog('${contact.id}')">View Log</button>
+    </td>
+`;
         contactsTableBody.appendChild(row);
     }
 };
@@ -118,6 +122,39 @@ const logInteraction = async (contactId) => {
     // 1. Ask the user for notes using a simple popup prompt.
     const notes = prompt("Enter notes for this interaction (e.g., 'Met for coffee, discussed trip to Italy'):");
 
+/**
+ * Fetches and displays the interaction log for a specific contact.
+ */
+const viewLog = async (contactId) => {
+    // 1. Fetch all interactions for this specific contact from the database.
+    const { data: interactions, error } = await supabaseClient
+        .from('interactions')
+        .select('created_at, notes') // Only get the columns we need
+        .eq('contact_id', contactId) // Filter by the contact's ID
+        .order('created_at', { ascending: false }); // Show newest first
+
+    if (error) {
+        console.error('Error fetching log:', error);
+        alert('Could not retrieve interaction log.');
+        return;
+    }
+
+    // 2. Format the log for display.
+    let logHistory = 'Interaction History:\n\n';
+    if (interactions.length === 0) {
+        logHistory = 'No interactions have been logged for this contact yet.';
+    } else {
+        for (const interaction of interactions) {
+            // Format the date to be more readable
+            const date = new Date(interaction.created_at).toLocaleDateString();
+            logHistory += `${date}: ${interaction.notes}\n`; // Add each log entry
+        }
+    }
+
+    // 3. Display the formatted log in a pop-up alert.
+    alert(logHistory);
+};
+    
     // 2. If the user entered notes (and didn't click cancel)
     if (notes) {
         // 3. Save the new interaction to the 'interactions' table.
