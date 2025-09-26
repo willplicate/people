@@ -75,7 +75,7 @@ export default function ContactDetailPage() {
         <div className="bg-card p-6 rounded-card shadow-card">
           <h1 className="text-2xl font-bold text-foreground mb-6">Edit Contact</h1>
           <ContactForm
-            contact={contact}
+            contact={contact || undefined}
             onSave={handleSave}
             onCancel={handleCancel}
             isLoading={editLoading}

@@ -6,6 +6,7 @@ import { InteractionService } from '@/services/InteractionService'
 import { ReminderService } from '@/services/ReminderService'
 import { ReminderCalculatorService } from '@/services/ReminderCalculatorService'
 import { AutomatedReminderService } from '@/services/AutomatedReminderService'
+import { PersonalTaskService } from '@/services/PersonalTaskService'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,9 +14,10 @@ export async function GET(request: NextRequest) {
     await AutomatedReminderService.generateUpcomingReminders()
 
     // Get basic data
-    const [contacts, upcomingReminders] = await Promise.all([
+    const [contacts, upcomingReminders, importantTasks] = await Promise.all([
       ContactService.getAll(),
-      AutomatedReminderService.getUpcomingReminders(7)
+      AutomatedReminderService.getUpcomingReminders(7),
+      PersonalTaskService.getImportantTasks()
     ])
 
     // Get recent interactions with contact information
@@ -61,7 +63,8 @@ export async function GET(request: NextRequest) {
       upcomingReminders: upcomingReminders,
       recentInteractions: interactions || [],
       upcomingBirthdays: upcomingBirthdays,
-      overdueContacts: overdueContacts
+      overdueContacts: overdueContacts,
+      importantTasks: importantTasks
     }
 
     return NextResponse.json(dashboardData)

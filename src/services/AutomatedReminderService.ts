@@ -131,6 +131,7 @@ export class AutomatedReminderService {
       .delete()
       .in('status', ['dismissed', 'sent'])
       .lt('scheduled_for', cutoffDate.toISOString())
+      .select('id')
 
     if (error) {
       throw new Error(`Failed to cleanup old reminders: ${error.message}`)
@@ -154,6 +155,7 @@ export class AutomatedReminderService {
       .delete()
       .eq('status', 'pending')
       .eq('type', 'communication')
+      .select('id')
 
     if (deleteError) {
       throw new Error(`Failed to delete existing reminders: ${deleteError.message}`)

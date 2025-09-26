@@ -14,6 +14,7 @@ export interface FilterOptions {
   needsAttention?: boolean
   remindersPaused?: boolean
   christmasList?: boolean
+  noFrequency?: boolean
 }
 
 export default function SearchFilter({ onSearchChange, onFilterChange, className = '' }: SearchFilterProps) {
@@ -166,6 +167,16 @@ export default function SearchFilter({ onSearchChange, onFilterChange, className
                   />
                   <span className="ml-2 text-sm text-gray-900">🎄 On Christmas list</span>
                 </label>
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={filters.noFrequency || false}
+                    onChange={(e) => handleFilterChange('noFrequency', e.target.checked || undefined)}
+                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-900">No frequency assigned</span>
+                </label>
               </div>
             </div>
           </div>
@@ -203,6 +214,11 @@ export default function SearchFilter({ onSearchChange, onFilterChange, className
                 {filters.christmasList && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     🎄 Christmas list
+                  </span>
+                )}
+                {filters.noFrequency && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    No frequency
                   </span>
                 )}
               </div>

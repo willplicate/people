@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
                        searchParams.get('remindersPaused') === 'false' ? false : undefined,
       christmasList: searchParams.get('christmasList') === 'true' ? true :
                      searchParams.get('christmasList') === 'false' ? false : undefined,
+      noFrequency: searchParams.get('noFrequency') === 'true' ? true :
+                   searchParams.get('noFrequency') === 'false' ? false : undefined,
       sortBy: (searchParams.get('sort_by') as any) || 'first_name',
       sortOrder: (searchParams.get('sort_order') as 'asc' | 'desc') || 'asc',
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
@@ -26,7 +28,8 @@ export async function GET(request: NextRequest) {
       search: options.search,
       communicationFrequency: options.communicationFrequency,
       remindersPaused: options.remindersPaused,
-      christmasList: options.christmasList
+      christmasList: options.christmasList,
+      noFrequency: options.noFrequency
     })
 
     return NextResponse.json({

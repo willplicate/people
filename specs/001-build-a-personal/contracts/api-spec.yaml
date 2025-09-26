@@ -1,0 +1,643 @@
+openapi: 3.0.3
+info:
+  title: Personal CRM API
+  version: 1.0.0
+  description: API for managing personal relationships and reminders
+
+paths:
+  # Contact Management
+  /api/contacts:
+    get:
+      summary: List all contacts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search term for name/nickname
+        - name: filter
+          in: query
+          schema:
+            type: string
+            enum: [overdue, upcoming_birthday, no_frequency]
+          description: Filter contacts by status
+      responses:
+        '200':
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+    
+    post:
+      summary: Create new contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContactRequest'
+      responses:
+        '201':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: Validation error
+
+  /api/contacts/{id}:
+    get:
+      summary: Get contact by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contact details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDetail'
+        '404':
+          description: Contact not found
+
+    put:
+      summary: Update contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContactRequest'
+      responses:
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '404':
+          description: Contact not found
+
+    delete:
+      summary: Delete contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Contact deleted
+        '404':
+          description: Contact not found
+
+  # Contact Information Management
+  /api/contacts/{id}/contact-info:
+    get:
+      summary: Get contact information for a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contact information list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContactInfo'
+
+    post:
+      summary: Add contact information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContactInfoRequest'
+      responses:
+        '201':
+          description: Contact information added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactInfo'
+
+  /api/contact-info/{id}:
+    put:
+      summary: Update contact information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContactInfoRequest'
+      responses:
+        '200':
+          description: Contact information updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactInfo'
+
+    delete:
+      summary: Delete contact information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Contact information deleted
+
+  # Interaction Management
+  /api/contacts/{id}/interactions:
+    get:
+      summary: Get interactions for a contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Interaction history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  interactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Interaction'
+                  total:
+                    type: integer
+
+    post:
+      summary: Add interaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInteractionRequest'
+      responses:
+        '201':
+          description: Interaction added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interaction'
+
+  /api/interactions/{id}:
+    put:
+      summary: Update interaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInteractionRequest'
+      responses:
+        '200':
+          description: Interaction updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interaction'
+
+    delete:
+      summary: Delete interaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Interaction deleted
+
+  # Reminder Management
+  /api/reminders:
+    get:
+      summary: Get pending reminders
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [communication, birthday_week, birthday_day]
+        - name: due_before
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reminder'
+
+  /api/reminders/{id}/dismiss:
+    post:
+      summary: Dismiss reminder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reminder dismissed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+
+  # Dashboard Data
+  /api/dashboard:
+    get:
+      summary: Get dashboard overview
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+
+  # Data Export
+  /api/export:
+    get:
+      summary: Export all data as JSON
+      responses:
+        '200':
+          description: Complete data export
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExport'
+
+components:
+  schemas:
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+          nullable: true
+        nickname:
+          type: string
+          nullable: true
+        birthday:
+          type: string
+          format: date
+          nullable: true
+        communicationFrequency:
+          type: string
+          enum: [weekly, monthly, quarterly, biannually, annually]
+          nullable: true
+        lastContactedAt:
+          type: string
+          format: date-time
+          nullable: true
+        remindersPaused:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ContactDetail:
+      allOf:
+        - $ref: '#/components/schemas/Contact'
+        - type: object
+          properties:
+            contactInfo:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContactInfo'
+            recentInteractions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Interaction'
+            nextReminderDate:
+              type: string
+              format: date-time
+              nullable: true
+
+    ContactInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [phone, email, address]
+        label:
+          type: string
+          enum: [home, work, mobile, other]
+        value:
+          type: string
+        isPrimary:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Interaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [call, text, email, meetup, other]
+        notes:
+          type: string
+        interactionDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Reminder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+        contact:
+          $ref: '#/components/schemas/Contact'
+        type:
+          type: string
+          enum: [communication, birthday_week, birthday_day]
+        scheduledFor:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, sent, dismissed]
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Dashboard:
+      type: object
+      properties:
+        upcomingReminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reminder'
+        overdueContacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        upcomingBirthdays:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        recentInteractions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Interaction'
+        stats:
+          type: object
+          properties:
+            totalContacts:
+              type: integer
+            pendingReminders:
+              type: integer
+            interactionsThisWeek:
+              type: integer
+
+    DataExport:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactDetail'
+        exportDate:
+          type: string
+          format: date-time
+        version:
+          type: string
+
+    CreateContactRequest:
+      type: object
+      required:
+        - firstName
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        lastName:
+          type: string
+          maxLength: 50
+        nickname:
+          type: string
+          maxLength: 30
+        birthday:
+          type: string
+          format: date
+        communicationFrequency:
+          type: string
+          enum: [weekly, monthly, quarterly, biannually, annually]
+        notes:
+          type: string
+
+    UpdateContactRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+        lastName:
+          type: string
+          maxLength: 50
+        nickname:
+          type: string
+          maxLength: 30
+        birthday:
+          type: string
+          format: date
+        communicationFrequency:
+          type: string
+          enum: [weekly, monthly, quarterly, biannually, annually]
+        remindersPaused:
+          type: boolean
+        notes:
+          type: string
+
+    CreateContactInfoRequest:
+      type: object
+      required:
+        - type
+        - label
+        - value
+      properties:
+        type:
+          type: string
+          enum: [phone, email, address]
+        label:
+          type: string
+          enum: [home, work, mobile, other]
+        value:
+          type: string
+        isPrimary:
+          type: boolean
+
+    UpdateContactInfoRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          enum: [home, work, mobile, other]
+        value:
+          type: string
+        isPrimary:
+          type: boolean
+
+    CreateInteractionRequest:
+      type: object
+      required:
+        - type
+        - notes
+        - interactionDate
+      properties:
+        type:
+          type: string
+          enum: [call, text, email, meetup, other]
+        notes:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        interactionDate:
+          type: string
+          format: date-time
+
+    UpdateInteractionRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [call, text, email, meetup, other]
+        notes:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        interactionDate:
+          type: string
+          format: date-time

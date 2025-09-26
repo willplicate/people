@@ -1,0 +1,11 @@
+first_name,last_name,nickname,email,phone,address,birthday,communication_frequency,notes
+John,Doe,Johnny,john.doe@email.com,555-0123,123 Main St,01-15,monthly,College friend from Boston
+Jane,Smith,,jane.smith@email.com,555-0456,456 Oak Ave,03-22,quarterly,Work colleague at TechCorp
+Mike,Johnson,Mikey,mike.j@email.com,555-0789,,07-08,annually,High school buddy
+Sarah,Williams,,sarah.w@email.com,555-0321,789 Pine St,12-03,monthly,Neighbor and coffee friend
+David,Brown,Dave,david.brown@email.com,555-0654,321 Elm St,05-14,biannually,Former colleague
+Lisa,Davis,,lisa.davis@email.com,555-0987,,09-28,quarterly,Yoga class friend
+Tom,Miller,Tommy,tom.miller@email.com,555-0432,654 Maple Ave,11-12,annually,University roommate
+Amy,Wilson,,amy.wilson@email.com,555-0765,987 Cedar St,02-19,monthly,Book club member
+Chris,Moore,Chrissy,chris.m@email.com,555-0543,,06-07,quarterly,Hiking partner
+Emma,Taylor,,emma.taylor@email.com,555-0876,147 Birch St,04-25,annually,Art class friend

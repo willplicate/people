@@ -2,6 +2,7 @@ import { google } from 'googleapis'
 import { ContactService } from './ContactService'
 import { ContactInfoService } from './ContactInfoService'
 import { SyncHistoryService } from './SyncHistoryService'
+import { DeletedContactService } from './DeletedContactService'
 import { CreateContactInput, CreateContactInfoInput } from '@/types/database'
 
 export interface GoogleContact {
@@ -45,6 +46,7 @@ export interface SyncResult {
   imported: number
   updated: number
   skipped: number
+  skippedDeleted: number
   errors: string[]
 }
 
@@ -70,7 +72,7 @@ export class GoogleSyncService {
       let nextPageToken = undefined
 
       do {
-        const response = await people.people.connections.list({
+        const response: any = await people.people.connections.list({
           resourceName: 'people/me',
           pageSize: 1000,
           personFields: 'names,emailAddresses,phoneNumbers,addresses,birthdays',
@@ -107,13 +109,14 @@ export class GoogleSyncService {
     // Create contact
     const contact: CreateContactInput = {
       first_name: names?.givenName || names?.displayName?.split(' ')[0] || 'Unknown',
-      last_name: names?.familyName || (names?.displayName?.split(' ').slice(1).join(' ')) || null,
-      nickname: null,
-      birthday: birthday?.date ? `${String(birthday.date.month).padStart(2, '0')}-${String(birthday.date.day).padStart(2, '0')}` : null,
-      communication_frequency: null, // User will set this manually
-      last_contacted_at: null,
+      last_name: names?.familyName || (names?.displayName?.split(' ').slice(1).join(' ')) || undefined,
+      nickname: undefined,
+      birthday: birthday?.date ? `${String(birthday.date.month).padStart(2, '0')}-${String(birthday.date.day).padStart(2, '0')}` : undefined,
+      communication_frequency: undefined, // User will set this manually
+      last_contacted_at: undefined,
       reminders_paused: true, // Default to paused until user sets frequency
       is_emergency: false,
+      christmas_list: false,
       notes: 'Imported from Google Contacts'
     }
 
@@ -204,13 +207,15 @@ export class GoogleSyncService {
 
   /**
    * Sync Google contacts to local database
+   * Skips contacts that were previously deleted to prevent re-import
    */
-  static async syncContacts(accessToken: string): Promise<SyncResult> {
+  static async syncContacts(accessToken: string, forceFullSync: boolean = false): Promise<SyncResult> {
     const startTime = new Date()
     const result: SyncResult = {
       imported: 0,
       updated: 0,
       skipped: 0,
+      skippedDeleted: 0,
       errors: []
     }
 
@@ -225,6 +230,24 @@ export class GoogleSyncService {
           if (!googleContact.names?.[0]?.givenName && !googleContact.names?.[0]?.displayName) {
             result.skipped++
             continue
+          }
+
+          // Check if contact was previously deleted (unless forcing full sync)
+          if (!forceFullSync) {
+            const names = googleContact.names?.[0]
+            const primaryEmail = googleContact.emailAddresses?.find(e => e.metadata?.primary) || googleContact.emailAddresses?.[0]
+            const displayName = names?.displayName || `${names?.givenName || ''} ${names?.familyName || ''}`.trim()
+
+            const wasDeleted = await DeletedContactService.wasGoogleContactDeleted(
+              googleContact.resourceName,
+              primaryEmail?.value,
+              displayName
+            )
+
+            if (wasDeleted) {
+              result.skippedDeleted++
+              continue // Skip previously deleted contacts
+            }
           }
 
           // Check if contact already exists

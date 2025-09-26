@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Contact, Reminder, Interaction } from '@/types/database'
+import { Contact, Reminder, Interaction, PersonalTask } from '@/types/database'
 
 interface DashboardData {
   stats: {
@@ -15,6 +15,10 @@ interface DashboardData {
   recentInteractions: (Interaction & { contact?: { first_name: string; last_name?: string; nickname?: string } })[]
   upcomingBirthdays: Contact[]
   overdueContacts: Contact[]
+  importantTasks: {
+    work: PersonalTask[]
+    personal: PersonalTask[]
+  }
 }
 
 export default function Dashboard() {
@@ -144,6 +148,62 @@ export default function Dashboard() {
     }
   }
 
+  const handleToggleTaskStatus = async (task: PersonalTask) => {
+    const newStatus = task.status === 'completed' ? 'todo' : 'completed'
+
+    // Optimistic update: immediately update local state
+    setData(prevData => {
+      if (!prevData) return prevData
+
+      const updatedTask = {
+        ...task,
+        status: newStatus,
+        completed_at: newStatus === 'completed' ? new Date().toISOString() : null
+      }
+
+      // Remove completed tasks from the display (they disappear immediately)
+      const filterActiveTasks = (tasks: PersonalTask[]) =>
+        tasks.map(t => t.id === task.id ? updatedTask : t)
+               .filter(t => t.status !== 'completed')
+
+      return {
+        ...prevData,
+        importantTasks: {
+          work: filterActiveTasks(prevData.importantTasks?.work || []),
+          personal: filterActiveTasks(prevData.importantTasks?.personal || [])
+        }
+      }
+    })
+
+    // Background API call (no await to avoid blocking UI)
+    fetch(`/api/tasks/${task.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: newStatus,
+        completed_at: newStatus === 'completed' ? new Date().toISOString() : undefined
+      })
+    }).catch(err => {
+      console.error('Error updating task:', err)
+      // Rollback on error: revert the optimistic update
+      setData(prevData => {
+        if (!prevData) return prevData
+        const revertedTask = { ...task }
+        const revertTasks = (tasks: PersonalTask[]) =>
+          tasks.map(t => t.id === task.id ? revertedTask : t)
+
+        return {
+          ...prevData,
+          importantTasks: {
+            work: task.category === 'work' ? [...(prevData.importantTasks?.work || []), revertedTask] : prevData.importantTasks?.work || [],
+            personal: task.category === 'personal' ? [...(prevData.importantTasks?.personal || []), revertedTask] : prevData.importantTasks?.personal || []
+          }
+        }
+      })
+      setError('Failed to update task')
+    })
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -234,41 +294,132 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Upcoming Reminders - Full Width */}
-      <div className="bg-card p-6 rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-200">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Upcoming Reminders</h2>
-        {data.upcomingReminders.length === 0 ? (
-          <p className="text-muted-foreground">No upcoming reminders</p>
-        ) : (
-          <div className="space-y-3">
-            {data.upcomingReminders.slice(0, 5).map((reminder) => (
-              <div key={reminder.id} className="flex items-center p-3 bg-muted rounded-card hover:bg-muted/80 transition-colors">
-                <input
-                  type="checkbox"
-                  className="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                  onChange={() => handleDismissReminder(reminder.id)}
-                  disabled={dismissingReminder.has(reminder.id)}
-                />
-                <div className="flex-1">
-                  <p className="font-medium text-foreground">{reminder.message}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {reminder.contact ? `${reminder.contact.first_name} ${reminder.contact.last_name || ''}`.trim() : 'Contact'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(reminder.scheduled_for)}
-                  </p>
+      {/* Split Section: Contact Reminders & Today's Important Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-card-gap">
+        {/* Left: Contact Reminders */}
+        <div className="bg-card p-6 rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-200">
+          <h2 className="text-lg font-semibold text-foreground mb-4">📞 Upcoming Contact Reminders</h2>
+          {data.upcomingReminders.length === 0 ? (
+            <p className="text-muted-foreground">No upcoming reminders</p>
+          ) : (
+            <div className="space-y-3">
+              {data.upcomingReminders.slice(0, 3).map((reminder) => (
+                <div key={reminder.id} className="flex items-center p-3 bg-muted rounded-card hover:bg-muted/80 transition-colors">
+                  <input
+                    type="checkbox"
+                    className="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    onChange={() => handleDismissReminder(reminder.id)}
+                    disabled={dismissingReminder.has(reminder.id)}
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-foreground text-sm">{reminder.message}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(reminder.scheduled_for)}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    reminder.type === 'birthday_day' ? 'bg-primary-100 text-primary-700' :
+                    reminder.type === 'birthday_week' ? 'bg-blue-100 text-blue-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {reminder.type.replace('_', ' ')}
+                  </span>
                 </div>
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  reminder.type === 'birthday_day' ? 'bg-primary-100 text-primary-700' :
-                  reminder.type === 'birthday_week' ? 'bg-blue-100 text-blue-700' :
-                  'bg-green-100 text-green-700'
-                }`}>
-                  {reminder.type.replace('_', ' ')}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Today's Important Tasks */}
+        <div className="bg-card p-6 rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">📋 Today's Important Tasks</h2>
+            <button
+              onClick={() => router.push('/tasks')}
+              className="text-primary hover:text-primary/80 text-sm font-medium"
+            >
+              View All
+            </button>
           </div>
-        )}
+
+          {/* Work Tasks */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">💼 Work</h3>
+            {data.importantTasks?.work?.length === 0 || !data.importantTasks?.work ? (
+              <p className="text-xs text-muted-foreground mb-3">No work tasks</p>
+            ) : (
+              <div className="space-y-2 mb-3">
+                {data.importantTasks.work.slice(0, 3).map((task) => (
+                  <div key={task.id} className="flex items-center p-2 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
+                    <input
+                      type="checkbox"
+                      checked={task.status === 'completed'}
+                      onChange={() => handleToggleTaskStatus(task)}
+                      className="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                        {task.title}
+                      </p>
+                      {task.due_date && (
+                        <p className="text-xs text-muted-foreground">
+                          Due: {formatDate(task.due_date)}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                      task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                      task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Personal Tasks */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">🏠 Personal</h3>
+            {data.importantTasks?.personal?.length === 0 || !data.importantTasks?.personal ? (
+              <p className="text-xs text-muted-foreground">No personal tasks</p>
+            ) : (
+              <div className="space-y-2">
+                {data.importantTasks.personal.slice(0, 3).map((task) => (
+                  <div key={task.id} className="flex items-center p-2 bg-green-50 dark:bg-green-950 rounded border border-green-200 dark:border-green-800">
+                    <input
+                      type="checkbox"
+                      checked={task.status === 'completed'}
+                      onChange={() => handleToggleTaskStatus(task)}
+                      className="mr-3 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    />
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                        {task.title}
+                      </p>
+                      {task.due_date && (
+                        <p className="text-xs text-muted-foreground">
+                          Due: {formatDate(task.due_date)}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      task.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                      task.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                      task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-card-gap">

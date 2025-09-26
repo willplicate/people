@@ -171,7 +171,7 @@ Jane,Smith,,jane@example.com,555-0456,,03-22,quarterly,Work colleague`
             </span>
           </label>
           <p className="text-xs text-muted-foreground ml-6">
-            When enabled, contacts with communication frequencies won't all be due immediately
+            When enabled, contacts with communication frequencies won&apos;t all be due immediately
           </p>
         </div>
 

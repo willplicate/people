@@ -1,5 +1,7 @@
 import { supabase, TABLES } from '@/lib/supabase'
 import { Contact, CreateContactInput, UpdateContactInput } from '@/types/database'
+import { ContactInfoService } from './ContactInfoService'
+import { DeletedContactService } from './DeletedContactService'
 
 export class ContactService {
   /**
@@ -47,6 +49,7 @@ export class ContactService {
     communicationFrequency?: Contact['communication_frequency']
     remindersPaused?: boolean
     christmasList?: boolean
+    noFrequency?: boolean
     sortBy?: 'first_name' | 'last_name' | 'last_contacted_at' | 'created_at'
     sortOrder?: 'asc' | 'desc'
     limit?: number
@@ -69,6 +72,10 @@ export class ContactService {
 
     if (options?.christmasList !== undefined) {
       query = query.eq('christmas_list', options.christmasList)
+    }
+
+    if (options?.noFrequency !== undefined && options.noFrequency) {
+      query = query.is('communication_frequency', null)
     }
 
     // Apply sorting
@@ -102,7 +109,7 @@ export class ContactService {
 
     // Convert empty string timestamps to null to avoid PostgreSQL validation errors
     if (cleanedInput.last_contacted_at === "") {
-      cleanedInput.last_contacted_at = null
+      cleanedInput.last_contacted_at = undefined
     }
 
     const { data, error } = await supabase
@@ -121,8 +128,32 @@ export class ContactService {
 
   /**
    * Delete contact by ID (cascade deletes related records)
+   * Also records the deletion to prevent re-import during sync
    */
-  static async delete(id: string): Promise<void> {
+  static async delete(id: string, deletedBy?: string): Promise<void> {
+    // First, get the contact and its contact info before deleting
+    const contact = await this.getById(id)
+    if (!contact) {
+      throw new Error('Contact not found')
+    }
+
+    let contactInfo: any[] = []
+    try {
+      contactInfo = await ContactInfoService.getByContactId(id)
+    } catch (error) {
+      // If we can't get contact info, that's ok - we'll record deletion without it
+      console.warn('Could not fetch contact info for deletion tracking:', error)
+    }
+
+    // Record the deletion for sync tracking
+    try {
+      await DeletedContactService.recordDeletion(contact, contactInfo, deletedBy)
+    } catch (error) {
+      // Log but don't fail the deletion if we can't record it
+      console.error('Failed to record contact deletion for sync tracking:', error)
+    }
+
+    // Delete the contact (this will cascade delete related records)
     const { error } = await supabase
       .from(TABLES.CONTACTS)
       .delete()
@@ -205,7 +236,7 @@ export class ContactService {
         annually: 365
       }
       
-      return daysSinceContact >= frequencyDays[contact.communication_frequency]
+      return daysSinceContact >= frequencyDays[contact.communication_frequency as keyof typeof frequencyDays]
     })
   }
 
@@ -267,6 +298,7 @@ export class ContactService {
     communicationFrequency?: Contact['communication_frequency']
     remindersPaused?: boolean
     christmasList?: boolean
+    noFrequency?: boolean
   }): Promise<number> {
     let query = supabase.from(TABLES.CONTACTS).select('*', { count: 'exact', head: true })
 
@@ -284,6 +316,10 @@ export class ContactService {
 
     if (filters?.christmasList !== undefined) {
       query = query.eq('christmas_list', filters.christmasList)
+    }
+
+    if (filters?.noFrequency !== undefined && filters.noFrequency) {
+      query = query.is('communication_frequency', null)
     }
 
     const { count, error } = await query

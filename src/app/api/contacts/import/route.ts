@@ -56,12 +56,15 @@ export async function POST(request: NextRequest) {
 
         const contactInput: CreateContactInput = {
           first_name: row.first_name.trim(),
-          last_name: row.last_name?.trim() || null,
-          nickname: row.nickname?.trim() || null,
-          birthday: row.birthday?.trim() || null,
-          communication_frequency: row.communication_frequency || null,
-          notes: row.notes?.trim() || null,
-          last_contacted_at: lastContactedAt
+          last_name: row.last_name?.trim() || undefined,
+          nickname: row.nickname?.trim() || undefined,
+          birthday: row.birthday?.trim() || undefined,
+          communication_frequency: row.communication_frequency || undefined,
+          notes: row.notes?.trim() || undefined,
+          last_contacted_at: lastContactedAt || undefined,
+          reminders_paused: false,
+          is_emergency: false,
+          christmas_list: false
         }
 
         const contact = await ContactService.create(contactInput)

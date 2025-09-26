@@ -15,6 +15,7 @@ interface SyncResult {
   imported: number
   updated: number
   skipped: number
+  skippedDeleted: number
   errors: string[]
 }
 
@@ -67,14 +68,15 @@ export default function SyncPage() {
     }
   }
 
-  const handleSyncContacts = async () => {
+  const handleSyncContacts = async (forceFullSync: boolean = false) => {
     if (!session) return
 
     try {
       setIsSyncing(true)
       setError(null)
 
-      const response = await fetch('/api/sync/google/contacts', {
+      const url = forceFullSync ? '/api/sync/google/contacts?force=true' : '/api/sync/google/contacts'
+      const response = await fetch(url, {
         method: 'POST'
       })
 
@@ -204,7 +206,7 @@ export default function SyncPage() {
               Manually sync your Google Contacts to import new contacts. Existing contacts will be skipped.
             </p>
             <button
-              onClick={handleSyncContacts}
+              onClick={() => handleSyncContacts()}
               disabled={isSyncing}
               className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
@@ -226,7 +228,7 @@ export default function SyncPage() {
           {lastSyncResult && (
             <div className="bg-card p-6 rounded-lg border border-border">
               <h3 className="font-semibold text-foreground mb-4">Last Sync Result</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{lastSyncResult.imported}</div>
                   <div className="text-sm text-muted-foreground">Imported</div>
@@ -237,7 +239,11 @@ export default function SyncPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-600">{lastSyncResult.skipped}</div>
-                  <div className="text-sm text-muted-foreground">Skipped</div>
+                  <div className="text-sm text-muted-foreground">Skipped (Existing)</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{lastSyncResult.skippedDeleted || 0}</div>
+                  <div className="text-sm text-muted-foreground">Skipped (Deleted)</div>
                 </div>
               </div>
 

@@ -14,8 +14,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Starting Google Contacts sync...')
-    const result = await GoogleSyncService.syncContacts(session.accessToken as string)
+    // Get force parameter from request body or query
+    const { searchParams } = new URL(request.url)
+    const forceFullSync = searchParams.get('force') === 'true'
+
+    console.log('Starting Google Contacts sync...', forceFullSync ? '(FORCE FULL SYNC)' : '(smart sync)')
+    const result = await GoogleSyncService.syncContacts(session.accessToken as string, forceFullSync)
 
     return NextResponse.json({
       success: true,

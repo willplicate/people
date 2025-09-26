@@ -6,10 +6,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const format = (searchParams.get('format') as 'json' | 'csv') || 'json'
 
-    const exportData = await ExportService.exportAllData(format)
+    const exportData = await ExportService.exportData({ format })
 
     if (format === 'csv') {
-      return new NextResponse(exportData as string, {
+      return new NextResponse(exportData as unknown as string, {
         headers: {
           'Content-Type': 'text/csv',
           'Content-Disposition': 'attachment; filename="personal-crm-export.csv"',
