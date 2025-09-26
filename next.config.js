@@ -2,12 +2,11 @@
 const nextConfig = {
   // appDir is now stable in Next.js 15
   typescript: {
-    // Temporarily disable type checking during builds for faster deployment
+    // Disable type checking during builds for deployment
     ignoreBuildErrors: true,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
+    // Allow production builds to complete with ESLint errors
     ignoreDuringBuilds: true,
   },
 }
