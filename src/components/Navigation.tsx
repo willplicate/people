@@ -13,7 +13,6 @@ export default function Navigation() {
     { href: '/tasks', label: '✅ Tasks' },
     { href: '/urgent-tasks', label: '🚨 Urgent', priority: true },
     { href: '/shopping', label: '🛒 Shopping' },
-    { href: '/turtle', label: '🐢 Turtle' },
     { href: '/emergency-contacts', label: '🚨 Emergency', priority: true },
     { href: '/sync', label: '🔄 Sync' },
   ]
