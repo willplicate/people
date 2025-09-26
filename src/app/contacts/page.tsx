@@ -136,7 +136,7 @@ export default function ContactsPage() {
 
       // Generate random dates for each contact to spread out reminders
       const contactUpdates = Array.from(selectedContacts).map(contactId => {
-        let updateData: any = {
+        const updateData: any = {
           communication_frequency: frequency === '' ? undefined : frequency
         }
 

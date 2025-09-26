@@ -333,7 +333,7 @@ export default function Dashboard() {
         {/* Right: Today's Important Tasks */}
         <div className="bg-card p-6 rounded-card shadow-card hover:shadow-card-hover transition-shadow duration-200">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">📋 Today's Important Tasks</h2>
+            <h2 className="text-lg font-semibold text-foreground">📋 Today&apos;s Important Tasks</h2>
             <button
               onClick={() => router.push('/tasks')}
               className="text-primary hover:text-primary/80 text-sm font-medium"

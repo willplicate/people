@@ -156,7 +156,7 @@ export default function CountdownTimer({ className = '' }: CountdownTimerProps) 
 
       {state.timeLeft === 0 && (
         <div className="mt-3 text-center text-red-600 font-semibold">
-          Time's up! 🎉
+          Time&apos;s up! 🎉
         </div>
       )}
 

@@ -168,7 +168,7 @@ export default function HabitTracker() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">🎯 Today's Habits</h2>
+          <h2 className="text-xl font-semibold text-foreground">🎯 Today&apos;s Habits</h2>
         </div>
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
@@ -183,7 +183,7 @@ export default function HabitTracker() {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">🎯 Today's Habits</h2>
+          <h2 className="text-xl font-semibold text-foreground">🎯 Today&apos;s Habits</h2>
         </div>
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
@@ -203,7 +203,7 @@ export default function HabitTracker() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">🎯 Today's Habits</h2>
+          <h2 className="text-xl font-semibold text-foreground">🎯 Today&apos;s Habits</h2>
           {totalCount > 0 && (
             <p className="text-sm text-muted-foreground mt-1">
               {completedCount} of {totalCount} completed
