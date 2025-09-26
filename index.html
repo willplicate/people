@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal CRM - Test Deployment</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .success { color: #059669; }
+        .info { color: #0284c7; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="success">✅ Personal CRM - Deployment Test</h1>
+        <p>This is a simple test page to verify Vercel deployment is working.</p>
+
+        <h2 class="info">Deployment Info</h2>
+        <ul>
+            <li><strong>Status:</strong> Deployment successful</li>
+            <li><strong>Timestamp:</strong> <span id="timestamp"></span></li>
+            <li><strong>Repository:</strong> willplicate/people</li>
+            <li><strong>Branch:</strong> main</li>
+        </ul>
+
+        <h2 class="info">Next Steps</h2>
+        <p>If you can see this page, Vercel deployment is working correctly. The issue was likely with the Next.js routing configuration.</p>
+
+        <p><strong>To access the full Personal CRM application:</strong></p>
+        <ol>
+            <li>This test confirms Vercel can deploy your repository</li>
+            <li>We need to properly configure the Next.js application</li>
+            <li>Or deploy the working branch with correct settings</li>
+        </ol>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>
