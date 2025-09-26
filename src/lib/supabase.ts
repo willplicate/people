@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1bW15IiwiY'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create client with proper error handling for build time
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // Prevent issues during build time
+    detectSessionInUrl: false // Don't try to detect sessions during build
+  },
+  global: {
+    fetch: typeof fetch !== 'undefined' ? fetch : (() => Promise.reject(new Error('Fetch not available during build'))) as any
+  }
+})
 
 // Database table names (prefixed for LinkedinCRM database)
 export const TABLES = {
