@@ -28,11 +28,17 @@ export default function TasksPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showNewTaskForm, setShowNewTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<PersonalTask | null>(null)
-  const [newTask, setNewTask] = useState({
+  const [newTask, setNewTask] = useState<{
+    title: string
+    description: string
+    priority: 'medium'
+    category: 'work' | 'personal'
+    due_date: string
+  }>({
     title: '',
     description: '',
-    priority: 'medium' as const,
-    category: 'personal' as const,
+    priority: 'medium',
+    category: 'personal',
     due_date: ''
   })
 

@@ -29,9 +29,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
 
     // Create the position update input
@@ -47,7 +48,7 @@ export async function PUT(
       status: body.status
     }
 
-    const position = await TurtlePositionService.update(params.id, updateInput)
+    const position = await TurtlePositionService.update(id, updateInput)
 
     return NextResponse.json(position)
   } catch (error) {
@@ -61,10 +62,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await TurtlePositionService.delete(params.id)
+    const { id } = await params
+    await TurtlePositionService.delete(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error in turtle position DELETE:', error)

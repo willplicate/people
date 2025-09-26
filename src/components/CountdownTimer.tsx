@@ -20,7 +20,11 @@ export default function CountdownTimer({ className = '' }: CountdownTimerProps) 
     // Initial state load
     setState(timerStore.getState());
 
-    return unsubscribe;
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const formatTime = (seconds: number) => {

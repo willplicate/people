@@ -3,10 +3,11 @@ import { MeetingAgendaService } from '@/services/MeetingAgendaService'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const meeting = await MeetingAgendaService.getById(params.id)
+    const { id } = await params
+    const meeting = await MeetingAgendaService.getById(id)
 
     if (!meeting) {
       return NextResponse.json(
@@ -27,9 +28,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
 
     // Validate attendees array if provided
@@ -40,7 +42,7 @@ export async function PUT(
       )
     }
 
-    const meeting = await MeetingAgendaService.update(params.id, body)
+    const meeting = await MeetingAgendaService.update(id, body)
     return NextResponse.json(meeting)
   } catch (error) {
     console.error('Error updating meeting:', error)
@@ -53,10 +55,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await MeetingAgendaService.delete(params.id)
+    const { id } = await params
+    await MeetingAgendaService.delete(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting meeting:', error)

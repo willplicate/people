@@ -82,10 +82,12 @@ export default function TurtlePage() {
     const tradesByStrike = new Map<number, Array<TurtleTrade>>()
 
     positionTrades.forEach(trade => {
-      if (!tradesByStrike.has(trade.strike)) {
-        tradesByStrike.set(trade.strike, [])
+      if (trade.strike !== undefined) {
+        if (!tradesByStrike.has(trade.strike)) {
+          tradesByStrike.set(trade.strike, [])
+        }
+        tradesByStrike.get(trade.strike)!.push(trade)
       }
-      tradesByStrike.get(trade.strike)!.push(trade)
     })
 
     // Check each strike to see if there's an open position

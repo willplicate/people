@@ -16,8 +16,9 @@ interface ShoppingListDetailData {
   }
 }
 
-export default function ShoppingListDetailPage({ params }: { params: { id: string } }) {
+export default function ShoppingListDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const [listId, setListId] = useState<string | null>(null)
   const [data, setData] = useState<ShoppingListDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -34,15 +35,27 @@ export default function ShoppingListDetailPage({ params }: { params: { id: strin
   })
 
   useEffect(() => {
-    fetchListData()
-  }, [params.id])
+    const initializeParams = async () => {
+      const { id } = await params
+      setListId(id)
+    }
+    initializeParams()
+  }, [params])
+
+  useEffect(() => {
+    if (listId) {
+      fetchListData()
+    }
+  }, [listId])
 
   const fetchListData = async () => {
+    if (!listId) return
+
     try {
       setLoading(true)
       const [listResponse, itemsResponse] = await Promise.all([
-        fetch(`/api/shopping-lists/${params.id}`),
-        fetch(`/api/shopping-lists/${params.id}/items`)
+        fetch(`/api/shopping-lists/${listId}`),
+        fetch(`/api/shopping-lists/${listId}/items`)
       ])
 
       if (!listResponse.ok) throw new Error('Failed to fetch shopping list')
@@ -65,7 +78,7 @@ export default function ShoppingListDetailPage({ params }: { params: { id: strin
 
   const handleCreateItem = async () => {
     try {
-      const response = await fetch(`/api/shopping-lists/${params.id}/items`, {
+      const response = await fetch(`/api/shopping-lists/${listId}/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

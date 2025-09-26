@@ -27,11 +27,16 @@ export default function MeetingsPage() {
     tags: []
   })
 
-  const [quickTask, setQuickTask] = useState({
+  const [quickTask, setQuickTask] = useState<{
+    title: string
+    description: string
+    priority: 'medium'
+    category: 'work' | 'personal'
+  }>({
     title: '',
     description: '',
-    priority: 'medium' as const,
-    category: 'work' as const
+    priority: 'medium',
+    category: 'work'
   })
 
   const [attendeeInput, setAttendeeInput] = useState('')
