@@ -8,24 +8,40 @@ interface Contact {
   id: string
   first_name: string
   last_name?: string
-  email?: string
-  phone?: string
+  nickname?: string
+  birthday?: string
+  communication_frequency?: string
+  last_contacted_at?: string
+  notes?: string
   created_at: string
+  updated_at?: string
 }
 
 interface Task {
   id: string
   title: string
+  description?: string
+  priority?: string
+  status: string
+  due_date?: string
+  completed_at?: string
+  category?: string
   completed: boolean
-  priority: string
   created_at: string
+  updated_at?: string
 }
 
 interface Meeting {
   id: string
   title: string
+  attendees?: string[]
+  meeting_date?: string
+  agenda?: string
   agenda_items: any[]
+  notes?: string
+  fireflies_link?: string
   created_at: string
+  updated_at?: string
 }
 
 export default function SimpleCRMPage() {
@@ -38,22 +54,18 @@ export default function SimpleCRMPage() {
   const [newContact, setNewContact] = useState({
     first_name: '',
     last_name: '',
-    email: '',
-    phone: ''
+    nickname: '',
+    notes: ''
   })
 
   const fetchContacts = async () => {
     try {
       console.log('Fetching contacts...')
 
-      // Try multiple possible table configurations
-      let data = null
-      let error = null
-
-      // First try the expected table structure
+      // Use the correct schema from debug data
       const result = await supabase
         .from('personal_contacts')
-        .select('*')
+        .select('id, first_name, last_name, nickname, birthday, communication_frequency, last_contacted_at, created_at, updated_at, notes')
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -63,7 +75,7 @@ export default function SimpleCRMPage() {
       }
 
       setContacts(result.data || [])
-      console.log(`Successfully loaded ${result.data?.length || 0} contacts`)
+      console.log(`Successfully loaded ${result.data?.length || 0} contacts from 154 total`)
     } catch (err: any) {
       console.error('Fetch contacts error:', err)
       setError(`Contacts: ${err.message}`)
@@ -75,22 +87,27 @@ export default function SimpleCRMPage() {
       console.log('Fetching tasks...')
       const { data, error } = await supabase
         .from('personal_tasks')
-        .select('*')
+        .select('id, title, description, priority, status, due_date, completed_at, category, created_at, updated_at')
         .order('created_at', { ascending: false })
         .limit(50)
 
       if (error) {
         console.error('Tasks error:', error)
-        // Don't throw - just log and continue
-        console.log('Tasks table might not exist or have different schema')
         setTasks([])
         return
       }
-      setTasks(data || [])
-      console.log(`Successfully loaded ${data?.length || 0} tasks`)
+
+      // Transform status to completed boolean for display
+      const transformedTasks = (data || []).map(task => ({
+        ...task,
+        completed: task.status === 'completed' || task.completed_at !== null
+      }))
+
+      setTasks(transformedTasks)
+      console.log(`Successfully loaded ${data?.length || 0} tasks from 19 total`)
     } catch (err: any) {
       console.error('Fetch tasks error:', err)
-      setTasks([]) // Don't fail the whole page for missing tasks
+      setTasks([])
     }
   }
 
@@ -99,22 +116,27 @@ export default function SimpleCRMPage() {
       console.log('Fetching meetings...')
       const { data, error } = await supabase
         .from('meeting_agendas')
-        .select('*')
+        .select('id, title, attendees, meeting_date, agenda, notes, fireflies_link, created_at, updated_at')
         .order('created_at', { ascending: false })
         .limit(50)
 
       if (error) {
         console.error('Meetings error:', error)
-        // Don't throw - just log and continue
-        console.log('Meetings table might not exist or have different schema')
         setMeetings([])
         return
       }
-      setMeetings(data || [])
-      console.log(`Successfully loaded ${data?.length || 0} meetings`)
+
+      // Transform agenda to agenda_items for display compatibility
+      const transformedMeetings = (data || []).map(meeting => ({
+        ...meeting,
+        agenda_items: meeting.agenda ? meeting.agenda.split('\n').filter(item => item.trim()) : []
+      }))
+
+      setMeetings(transformedMeetings)
+      console.log(`Successfully loaded ${data?.length || 0} meetings from 7 total`)
     } catch (err: any) {
       console.error('Fetch meetings error:', err)
-      setMeetings([]) // Don't fail the whole page for missing meetings
+      setMeetings([])
     }
   }
 
@@ -147,8 +169,8 @@ export default function SimpleCRMPage() {
         .insert([{
           first_name: newContact.first_name.trim(),
           last_name: newContact.last_name.trim() || null,
-          email: newContact.email.trim() || null,
-          phone: newContact.phone.trim() || null
+          nickname: newContact.nickname.trim() || null,
+          notes: newContact.notes.trim() || null
         }])
         .select()
         .single()
@@ -156,7 +178,7 @@ export default function SimpleCRMPage() {
       if (error) throw error
 
       setContacts(prev => [data, ...prev])
-      setNewContact({ first_name: '', last_name: '', email: '', phone: '' })
+      setNewContact({ first_name: '', last_name: '', nickname: '', notes: '' })
       alert('Contact added successfully!')
     } catch (err: any) {
       alert('Error adding contact: ' + err.message)
@@ -256,18 +278,18 @@ export default function SimpleCRMPage() {
               className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <input
-              type="email"
-              placeholder="Email"
-              value={newContact.email}
-              onChange={(e) => setNewContact(prev => ({ ...prev, email: e.target.value }))}
+              type="text"
+              placeholder="Nickname"
+              value={newContact.nickname}
+              onChange={(e) => setNewContact(prev => ({ ...prev, nickname: e.target.value }))}
               className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <input
-              type="tel"
-              placeholder="Phone"
-              value={newContact.phone}
-              onChange={(e) => setNewContact(prev => ({ ...prev, phone: e.target.value }))}
+            <textarea
+              placeholder="Notes"
+              value={newContact.notes}
+              onChange={(e) => setNewContact(prev => ({ ...prev, notes: e.target.value }))}
               className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={2}
             />
             <div className="md:col-span-2">
               <button
@@ -324,13 +346,22 @@ export default function SimpleCRMPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-medium text-gray-900">
-                          {contact.first_name || contact.name || 'Contact'} {contact.last_name || ''}
+                          {contact.first_name} {contact.last_name}
+                          {contact.nickname && contact.nickname !== contact.first_name && (
+                            <span className="text-sm text-gray-500 ml-2">({contact.nickname})</span>
+                          )}
                         </h3>
-                        {(contact.email || contact.email_address) && (
-                          <p className="text-sm text-blue-600">📧 {contact.email || contact.email_address}</p>
+                        {contact.birthday && (
+                          <p className="text-sm text-purple-600">🎂 {contact.birthday}</p>
                         )}
-                        {(contact.phone || contact.phone_number) && (
-                          <p className="text-sm text-green-600">📞 {contact.phone || contact.phone_number}</p>
+                        {contact.communication_frequency && (
+                          <p className="text-sm text-green-600">📅 {contact.communication_frequency}</p>
+                        )}
+                        {contact.last_contacted_at && (
+                          <p className="text-sm text-blue-600">💬 Last: {new Date(contact.last_contacted_at).toLocaleDateString()}</p>
+                        )}
+                        {contact.notes && (
+                          <p className="text-sm text-gray-600 mt-1 italic">{contact.notes}</p>
                         )}
                       </div>
                       <span className="text-xs text-gray-500">
