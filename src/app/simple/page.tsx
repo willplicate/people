@@ -309,7 +309,7 @@ export default function SimpleCRMPage() {
         )}
 
         {/* Contacts Tab */}
-        {activeTab === 'contacts' && !loading && !error && (
+        {activeTab === 'contacts' && !loading && (
           <>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">👥 Your Contacts</h2>
             {contacts.length === 0 ? (
@@ -323,17 +323,17 @@ export default function SimpleCRMPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-medium text-gray-900">
-                          {contact.first_name} {contact.last_name}
+                          {contact.first_name || contact.name || 'Contact'} {contact.last_name || ''}
                         </h3>
-                        {contact.email && (
-                          <p className="text-sm text-blue-600">📧 {contact.email}</p>
+                        {(contact.email || contact.email_address) && (
+                          <p className="text-sm text-blue-600">📧 {contact.email || contact.email_address}</p>
                         )}
-                        {contact.phone && (
-                          <p className="text-sm text-green-600">📞 {contact.phone}</p>
+                        {(contact.phone || contact.phone_number) && (
+                          <p className="text-sm text-green-600">📞 {contact.phone || contact.phone_number}</p>
                         )}
                       </div>
                       <span className="text-xs text-gray-500">
-                        {new Date(contact.created_at).toLocaleDateString()}
+                        {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : ''}
                       </span>
                     </div>
                   </div>
@@ -344,7 +344,7 @@ export default function SimpleCRMPage() {
         )}
 
         {/* Tasks Tab */}
-        {activeTab === 'tasks' && !loading && !error && (
+        {activeTab === 'tasks' && !loading && (
           <>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">✅ Your Tasks</h2>
             {tasks.length === 0 ? (
@@ -364,13 +364,15 @@ export default function SimpleCRMPage() {
                         </div>
                         <div>
                           <h3 className={`font-medium ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                            {task.title}
+                            {task.title || task.name || 'Task'}
                           </h3>
-                          <p className="text-sm text-gray-500">Priority: {task.priority}</p>
+                          {task.priority && (
+                            <p className="text-sm text-gray-500">Priority: {task.priority}</p>
+                          )}
                         </div>
                       </div>
                       <span className="text-xs text-gray-500">
-                        {new Date(task.created_at).toLocaleDateString()}
+                        {task.created_at ? new Date(task.created_at).toLocaleDateString() : ''}
                       </span>
                     </div>
                   </div>
@@ -381,7 +383,7 @@ export default function SimpleCRMPage() {
         )}
 
         {/* Meetings Tab */}
-        {activeTab === 'meetings' && !loading && !error && (
+        {activeTab === 'meetings' && !loading && (
           <>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">📝 Your Meetings</h2>
             {meetings.length === 0 ? (
@@ -394,13 +396,13 @@ export default function SimpleCRMPage() {
                   <div key={meeting.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-gray-900">{meeting.title}</h3>
+                        <h3 className="font-medium text-gray-900">{meeting.title || meeting.name || 'Meeting'}</h3>
                         <p className="text-sm text-gray-600">
                           {meeting.agenda_items?.length || 0} agenda items
                         </p>
                       </div>
                       <span className="text-xs text-gray-500">
-                        {new Date(meeting.created_at).toLocaleDateString()}
+                        {meeting.created_at ? new Date(meeting.created_at).toLocaleDateString() : ''}
                       </span>
                     </div>
                   </div>
