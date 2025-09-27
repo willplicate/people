@@ -67,15 +67,17 @@ export default function SimpleCRMPage() {
         .from('personal_contacts')
         .select('id, first_name, last_name, nickname, birthday, communication_frequency, last_contacted_at, created_at, updated_at, notes')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(200)
 
       if (result.error) {
         console.error('Contacts query error:', result.error)
         throw new Error(`Could not load contacts: ${result.error.message}`)
       }
 
-      setContacts(result.data || [])
-      console.log(`Successfully loaded ${result.data?.length || 0} contacts from 154 total`)
+      const contactsData = result.data || []
+      setContacts(contactsData)
+      console.log(`Successfully loaded ${contactsData.length} contacts from 154 total`)
+      console.log('Contact data sample:', contactsData.slice(0, 2))
     } catch (err: any) {
       console.error('Fetch contacts error:', err)
       setError(`Contacts: ${err.message}`)
@@ -89,7 +91,7 @@ export default function SimpleCRMPage() {
         .from('personal_tasks')
         .select('id, title, description, priority, status, due_date, completed_at, category, created_at, updated_at')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(100)
 
       if (error) {
         console.error('Tasks error:', error)
@@ -335,6 +337,8 @@ export default function SimpleCRMPage() {
         {activeTab === 'contacts' && !loading && (
           <>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">👥 Your Contacts</h2>
+            {console.log('Rendering contacts tab, contacts.length:', contacts.length)}
+            {console.log('contacts state:', contacts.slice(0, 2))}
             {contacts.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600">No contacts yet. Add your first contact above!</p>
