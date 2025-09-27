@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static export for reliable deployment
-  output: 'export',
+  // Use regular Next.js deployment to allow environment variables at runtime
+  // output: 'export', // Commented out to allow env vars
 
-  // Disable image optimization for static export
+  // Keep image optimization disabled for better compatibility
   images: {
     unoptimized: true
   },
