@@ -44,46 +44,61 @@ export default function SimpleCRMPage() {
 
   const fetchContacts = async () => {
     try {
+      console.log('Fetching contacts with URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
       const { data, error } = await supabase
         .from('personal_contacts')
         .select('id, first_name, last_name, email, phone, created_at')
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
       setContacts(data || [])
     } catch (err: any) {
-      setError(err.message)
+      console.error('Fetch contacts error:', err)
+      setError(`Contacts: ${err.message}`)
     }
   }
 
   const fetchTasks = async () => {
     try {
+      console.log('Fetching tasks...')
       const { data, error } = await supabase
         .from('personal_tasks')
         .select('id, title, completed, priority, created_at')
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (error) throw error
+      if (error) {
+        console.error('Tasks error:', error)
+        throw error
+      }
       setTasks(data || [])
     } catch (err: any) {
-      setError(err.message)
+      console.error('Fetch tasks error:', err)
+      setError(`Tasks: ${err.message}`)
     }
   }
 
   const fetchMeetings = async () => {
     try {
+      console.log('Fetching meetings...')
       const { data, error } = await supabase
         .from('meeting_agendas')
         .select('id, title, agenda_items, created_at')
         .order('created_at', { ascending: false })
         .limit(50)
 
-      if (error) throw error
+      if (error) {
+        console.error('Meetings error:', error)
+        throw error
+      }
       setMeetings(data || [])
     } catch (err: any) {
-      setError(err.message)
+      console.error('Fetch meetings error:', err)
+      setError(`Meetings: ${err.message}`)
     }
   }
 
@@ -153,12 +168,14 @@ export default function SimpleCRMPage() {
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded p-4">
-            <h2 className="font-semibold text-blue-800 mb-2">📋 Your Data</h2>
+            <h2 className="font-semibold text-blue-800 mb-2">📋 Connection Info</h2>
             <ul className="text-sm text-blue-700 space-y-1">
               <li>• Contacts: {contacts.length}</li>
               <li>• Tasks: {tasks.length}</li>
               <li>• Meetings: {meetings.length}</li>
               <li>• Status: {error ? '❌ Error' : loading ? '⏳ Loading' : '✅ Connected'}</li>
+              <li>• URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing'}</li>
+              <li>• Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</li>
             </ul>
           </div>
         </div>
