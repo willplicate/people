@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal CRM - Loading...</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .loading {
+            color: #0284c7;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🏠 Personal CRM</h1>
+        <p class="loading">⏳ Application is starting up...</p>
+
+        <div style="margin-top: 2rem;">
+            <p>If this page doesn't redirect automatically, the Next.js app might not be loading properly.</p>
+
+            <h3>Manual Navigation:</h3>
+            <ul style="text-align: left; display: inline-block;">
+                <li><a href="/contacts">📧 Contacts</a></li>
+                <li><a href="/tasks">✅ Tasks</a></li>
+                <li><a href="/shopping">🛒 Shopping</a></li>
+                <li><a href="/meetings">📝 Meetings</a></li>
+                <li><a href="/health">🔧 Health Check</a></li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 2rem; padding: 1rem; background: #fee2e2; border-radius: 4px;">
+            <p><strong>If nothing works:</strong></p>
+            <p>The Next.js application deployment may have failed. Check the Netlify deploy logs.</p>
+        </div>
+    </div>
+
+    <script>
+        // Try to redirect to the Next.js app after a brief delay
+        setTimeout(() => {
+            if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                console.log('Attempting to load Next.js app...');
+                // This will try to trigger Next.js routing
+                window.history.pushState({}, '', '/');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
