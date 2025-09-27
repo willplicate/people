@@ -102,9 +102,39 @@ export default function SimpleCRMPage() {
     }
   }
 
+  const testConnection = async () => {
+    try {
+      console.log('Testing Supabase connection...')
+      const { data, error } = await supabase
+        .from('personal_contacts')
+        .select('count(*)', { count: 'exact', head: true })
+
+      if (error) {
+        console.error('Connection test error:', error)
+        setError(`Connection test failed: ${error.message}`)
+        return false
+      }
+
+      console.log('Connection test successful')
+      return true
+    } catch (err: any) {
+      console.error('Connection test exception:', err)
+      setError(`Connection test exception: ${err.message}`)
+      return false
+    }
+  }
+
   const fetchAllData = async () => {
     setLoading(true)
     setError(null)
+
+    // First test the connection
+    const connectionOk = await testConnection()
+    if (!connectionOk) {
+      setLoading(false)
+      return
+    }
+
     try {
       await Promise.all([fetchContacts(), fetchTasks(), fetchMeetings()])
     } catch (err: any) {
@@ -272,6 +302,14 @@ export default function SimpleCRMPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
             <p className="text-red-700">❌ Error: {error}</p>
+            <details className="mt-2">
+              <summary className="text-sm text-red-600 cursor-pointer">Debug Info</summary>
+              <div className="mt-2 text-xs text-red-600 font-mono bg-red-100 p-2 rounded">
+                <p>Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL}</p>
+                <p>Has Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Yes' : 'No'}</p>
+                <p>Key Length: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 0}</p>
+              </div>
+            </details>
             <button
               onClick={fetchAllData}
               className="mt-2 text-sm bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
