@@ -82,6 +82,12 @@ export default function TestSupabasePage() {
         <p>URL: {process.env.NEXT_PUBLIC_SUPABASE_URL || 'NOT SET'}</p>
         <p>Key: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'}</p>
         <p>Key Length: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 0}</p>
+        <details className="mt-2">
+          <summary className="cursor-pointer text-sm text-blue-600">Show Full Key (Debug)</summary>
+          <div className="mt-2 p-2 bg-gray-200 text-xs font-mono break-all">
+            {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'NOT SET'}
+          </div>
+        </details>
       </div>
 
       <button
