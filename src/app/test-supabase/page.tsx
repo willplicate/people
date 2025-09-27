@@ -41,25 +41,50 @@ export default function TestSupabasePage() {
         setResult(prev => prev + `\n❌ Fetch failed: ${fetchErr.message}`)
       }
 
-      // Test 3: Try Supabase client query
-      setResult(prev => prev + '\n🔍 Testing Supabase client...')
+      // Test 3: Check what tables exist
+      setResult(prev => prev + '\n🔍 Checking available tables...')
 
-      const { data, error, count } = await supabase
-        .from('personal_contacts')
-        .select('*', { count: 'exact' })
-        .limit(1)
+      try {
+        // Try to get schema information
+        const { data: tables, error: tablesError } = await supabase
+          .rpc('get_schema_tables')
+          .single()
 
-      if (error) {
-        setResult(prev => prev + `\n❌ Supabase error: ${error.message}`)
-        setResult(prev => prev + `\n❌ Error code: ${error.code}`)
-        setResult(prev => prev + `\n❌ Error hint: ${error.hint}`)
-        setResult(prev => prev + `\n❌ Error details: ${error.details}`)
-        return
+        if (tablesError) {
+          setResult(prev => prev + `\n⚠️ Could not get table list: ${tablesError.message}`)
+        } else {
+          setResult(prev => prev + `\n📋 Available tables: ${JSON.stringify(tables)}`)
+        }
+      } catch (schemaErr) {
+        setResult(prev => prev + `\n⚠️ Schema check failed: ${schemaErr}`)
       }
 
-      setResult(prev => prev + `\n✅ Query successful`)
-      setResult(prev => prev + `\n📊 Total contacts: ${count}`)
-      setResult(prev => prev + `\n📝 Sample data: ${JSON.stringify(data, null, 2)}`)
+      // Test 4: Try different table names
+      const tablesToTry = ['personal_contacts', 'contacts', 'users', 'profiles']
+
+      for (const tableName of tablesToTry) {
+        setResult(prev => prev + `\n🔍 Testing table: ${tableName}`)
+
+        try {
+          const { data, error, count } = await supabase
+            .from(tableName)
+            .select('*', { count: 'exact' })
+            .limit(1)
+
+          if (error) {
+            setResult(prev => prev + `\n❌ ${tableName}: ${error.message}`)
+          } else {
+            setResult(prev => prev + `\n✅ ${tableName}: Found ${count} records`)
+            if (data && data.length > 0) {
+              setResult(prev => prev + `\n📝 ${tableName} columns: ${Object.keys(data[0]).join(', ')}`)
+              setResult(prev => prev + `\n📄 Sample: ${JSON.stringify(data[0], null, 2)}`)
+            }
+            break // Found working table
+          }
+        } catch (tableErr: any) {
+          setResult(prev => prev + `\n❌ ${tableName} exception: ${tableErr.message}`)
+        }
+      }
 
     } catch (err: any) {
       setResult(prev => prev + `\n❌ Exception: ${err.message}`)
