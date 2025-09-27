@@ -20,7 +20,30 @@ export default function TestSupabasePage() {
 
       setResult(prev => prev + '\n✅ Environment variables loaded')
 
-      // Test 2: Simple query
+      // Test 2: Check if we can reach Supabase at all
+      setResult(prev => prev + '\n🔍 Testing basic connectivity...')
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`, {
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`
+          }
+        })
+
+        setResult(prev => prev + `\n✅ Basic fetch response: ${response.status}`)
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          setResult(prev => prev + `\n❌ HTTP Error: ${errorText}`)
+        }
+      } catch (fetchErr: any) {
+        setResult(prev => prev + `\n❌ Fetch failed: ${fetchErr.message}`)
+      }
+
+      // Test 3: Try Supabase client query
+      setResult(prev => prev + '\n🔍 Testing Supabase client...')
+
       const { data, error, count } = await supabase
         .from('personal_contacts')
         .select('*', { count: 'exact' })
@@ -28,7 +51,9 @@ export default function TestSupabasePage() {
 
       if (error) {
         setResult(prev => prev + `\n❌ Supabase error: ${error.message}`)
-        setResult(prev => prev + `\n❌ Error details: ${JSON.stringify(error, null, 2)}`)
+        setResult(prev => prev + `\n❌ Error code: ${error.code}`)
+        setResult(prev => prev + `\n❌ Error hint: ${error.hint}`)
+        setResult(prev => prev + `\n❌ Error details: ${error.details}`)
         return
       }
 
