@@ -23,7 +23,7 @@ export default function DebugTabsPage() {
         .from('personal_contacts')
         .select('id, first_name, last_name, nickname, birthday, communication_frequency, last_contacted_at, created_at, updated_at, notes')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(200)
 
       if (result.error) {
         addResult(`❌ Contacts query error: ${JSON.stringify(result.error)}`)
@@ -57,7 +57,7 @@ export default function DebugTabsPage() {
         .from('personal_tasks')
         .select('id, title, description, priority, status, due_date, completed_at, category, created_at, updated_at')
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(100)
 
       if (error) {
         addResult(`❌ Tasks query error: ${JSON.stringify(error)}`)
