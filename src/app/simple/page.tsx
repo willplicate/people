@@ -164,6 +164,7 @@ export default function SimpleCRMPage() {
   }
 
   useEffect(() => {
+    console.log('Simple page mounting, starting data fetch...')
     fetchAllData()
   }, [])
 

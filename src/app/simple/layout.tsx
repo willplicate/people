@@ -13,8 +13,11 @@ export default function SimpleLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {children}
+      <body className="bg-gray-50">
+        <div className="min-h-screen">
+          {children}
+        </div>
+        {/* Simple layout - no providers, no auth, no navigation */}
       </body>
     </html>
   )
