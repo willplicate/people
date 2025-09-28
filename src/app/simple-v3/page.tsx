@@ -67,6 +67,7 @@ export default function SimpleV3Page() {
   const [activeTab, setActiveTab] = useState<'contacts' | 'tasks' | 'meetings' | 'shopping' | 'urgent'>('contacts')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Helper functions for dashboard cards
   const getUpcomingTasks = () => {
@@ -151,8 +152,10 @@ export default function SimpleV3Page() {
         throw new Error(`Contacts: ${contactsResult.error.message}`)
       }
 
-      setContacts(contactsResult.data || [])
-      console.log(`✅ Loaded ${contactsResult.data?.length || 0} contacts`)
+      const contactsData = contactsResult.data || []
+      setContacts(contactsData)
+      console.log(`✅ Loaded ${contactsData.length} contacts`)
+      console.log('🔍 Contacts data sample:', contactsData.slice(0, 2))
 
       // Load tasks
       console.log('✅ Loading tasks...')
@@ -231,6 +234,18 @@ export default function SimpleV3Page() {
       }
 
       console.log('🎉 All data loaded successfully!')
+
+      // Force a re-render to ensure UI updates
+      setRefreshKey(prev => prev + 1)
+
+      // Double-check state after a brief delay
+      setTimeout(() => {
+        console.log('🔍 STATE CHECK after load:', {
+          contactsLength: contacts.length,
+          tasksLength: tasks.length,
+          refreshKey
+        })
+      }, 100)
     } catch (err: any) {
       console.error('❌ Error loading data:', err)
       setError(err.message)
@@ -242,15 +257,27 @@ export default function SimpleV3Page() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          📱 Simple Personal CRM v3
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+          📱 Personal CRM
         </h1>
+
+        {/* Quick Mobile Summary */}
+        {(contacts.length > 0 || tasks.length > 0) && (
+          <div className="bg-gray-50 rounded-lg p-3 mb-4 sm:hidden">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>📅 Due: {getUpcomingTasks().length}</div>
+              <div>💬 Follow up: {getContactsToContact().length}</div>
+              <div>🎂 Birthdays: {getUpcomingBirthdays().length}</div>
+              <div>🚨 Urgent: {getUrgentTasks().length}</div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-green-50 border border-green-200 rounded p-4">
             <h2 className="font-semibold text-green-800 mb-2">✅ Status</h2>
             <ul className="text-sm text-green-700 space-y-1">
-              <li>• Contacts: {contacts.length}</li>
+              <li>• Contacts: {contacts.length} (key: {refreshKey})</li>
               <li>• Tasks: {tasks.length}</li>
               <li>• Meetings: {meetings.length}</li>
               <li>• Shopping Lists: {shoppingLists.length}</li>
@@ -272,7 +299,7 @@ export default function SimpleV3Page() {
 
         {/* Dashboard Cards - Only show when data is loaded */}
         {(contacts.length > 0 || tasks.length > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 mb-6">
             {/* Upcoming Tasks */}
             <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
               <h3 className="font-semibold text-yellow-800 mb-2">📅 Due This Week</h3>
@@ -340,13 +367,13 @@ export default function SimpleV3Page() {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200">
+        {/* Tab Navigation - Mobile Optimized */}
+        <div className="flex flex-wrap border-b border-gray-200 gap-1">
           <button
             onClick={() => setActiveTab('contacts')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-3 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors ${
               activeTab === 'contacts'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -354,9 +381,9 @@ export default function SimpleV3Page() {
           </button>
           <button
             onClick={() => setActiveTab('tasks')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-3 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors ${
               activeTab === 'tasks'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -364,9 +391,9 @@ export default function SimpleV3Page() {
           </button>
           <button
             onClick={() => setActiveTab('meetings')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-3 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors ${
               activeTab === 'meetings'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -374,9 +401,9 @@ export default function SimpleV3Page() {
           </button>
           <button
             onClick={() => setActiveTab('shopping')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-3 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors ${
               activeTab === 'shopping'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -384,9 +411,9 @@ export default function SimpleV3Page() {
           </button>
           <button
             onClick={() => setActiveTab('urgent')}
-            className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+            className={`px-3 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors ${
               activeTab === 'urgent'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
