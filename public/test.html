@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netlify Test - Personal CRM</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f9fafb;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .success { color: #059669; }
+        .info { color: #0284c7; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="success">✅ Netlify Deployment Test</h1>
+        <p>If you can see this page, basic Netlify deployment is working!</p>
+
+        <h2 class="info">Test Results</h2>
+        <ul>
+            <li><strong>Static files:</strong> ✅ Working (you can see this page)</li>
+            <li><strong>Timestamp:</strong> <span id="timestamp"></span></li>
+            <li><strong>URL:</strong> <span id="url"></span></li>
+        </ul>
+
+        <h2 class="info">Next Steps</h2>
+        <p>Now we need to:</p>
+        <ol>
+            <li>Fix the Next.js routing issue</li>
+            <li>Ensure the home page loads at `/`</li>
+            <li>Test the API routes</li>
+        </ol>
+
+        <div style="margin-top: 2rem; padding: 1rem; background: #e0f2fe; border-radius: 4px;">
+            <p><strong>Try accessing:</strong></p>
+            <ul>
+                <li><a href="/">Home page</a> (might 404)</li>
+                <li><a href="/health">Health check</a> (might 404)</li>
+                <li><a href="/test.html">This test page</a> (should work)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+        document.getElementById('url').textContent = window.location.href;
+    </script>
+</body>
+</html>
