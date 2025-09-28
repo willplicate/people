@@ -334,46 +334,59 @@ export default function SimpleCRMPage() {
         )}
 
         {/* Contacts Tab */}
+        {console.log('Tab render check:', { activeTab, loading, contactsLength: contacts.length })}
         {activeTab === 'contacts' && !loading && (
           <>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">👥 Your Contacts</h2>
-            {console.log('Rendering contacts tab, contacts.length:', contacts.length)}
-            {console.log('contacts state:', contacts.slice(0, 2))}
+            {console.log('✅ CONTACTS TAB IS RENDERING! contacts.length:', contacts.length)}
+            {console.log('contacts state sample:', contacts.slice(0, 2))}
             {contacts.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600">No contacts yet. Add your first contact above!</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {contacts.map((contact) => (
-                  <div key={contact.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {contact.first_name} {contact.last_name}
-                          {contact.nickname && contact.nickname !== contact.first_name && (
-                            <span className="text-sm text-gray-500 ml-2">({contact.nickname})</span>
-                          )}
-                        </h3>
-                        {contact.birthday && (
-                          <p className="text-sm text-purple-600">🎂 {contact.birthday}</p>
-                        )}
-                        {contact.communication_frequency && (
-                          <p className="text-sm text-green-600">📅 {contact.communication_frequency}</p>
-                        )}
-                        {contact.last_contacted_at && (
-                          <p className="text-sm text-blue-600">💬 Last: {new Date(contact.last_contacted_at).toLocaleDateString()}</p>
-                        )}
-                        {contact.notes && (
-                          <p className="text-sm text-gray-600 mt-1 italic">{contact.notes}</p>
-                        )}
+                {console.log('About to render contacts:', contacts.length)}
+                {contacts.map((contact, index) => {
+                  try {
+                    return (
+                      <div key={contact.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-gray-900">
+                              {contact.first_name || ''} {contact.last_name || ''}
+                              {contact.nickname && contact.nickname !== contact.first_name && (
+                                <span className="text-sm text-gray-500 ml-2">({contact.nickname})</span>
+                              )}
+                            </h3>
+                            {contact.birthday && (
+                              <p className="text-sm text-purple-600">🎂 {contact.birthday}</p>
+                            )}
+                            {contact.communication_frequency && (
+                              <p className="text-sm text-green-600">📅 {contact.communication_frequency}</p>
+                            )}
+                            {contact.last_contacted_at && (
+                              <p className="text-sm text-blue-600">💬 Last: {new Date(contact.last_contacted_at).toLocaleDateString()}</p>
+                            )}
+                            {contact.notes && (
+                              <p className="text-sm text-gray-600 mt-1 italic">{contact.notes}</p>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : ''}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-500">
-                        {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : ''}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                    )
+                  } catch (contactError) {
+                    console.error(`Error rendering contact ${index}:`, contactError, contact)
+                    return (
+                      <div key={contact.id || index} className="border border-red-200 rounded p-4 bg-red-50">
+                        <p className="text-red-600">Error rendering contact: {contact.first_name} {contact.last_name}</p>
+                      </div>
+                    )
+                  }
+                })}
               </div>
             )}
           </>
