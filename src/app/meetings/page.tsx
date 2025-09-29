@@ -123,6 +123,10 @@ export default function MeetingsPage() {
   const handleEditMeeting = (meeting: MeetingAgenda) => {
     setEditingMeeting(meeting)
     setShowNewMeetingForm(false)
+    // Scroll to top to show the edit form
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 100)
   }
 
   const handleCancelEdit = () => {
@@ -400,8 +404,18 @@ export default function MeetingsPage() {
 
       {/* Edit Meeting Form */}
       {editingMeeting && (
-        <div className="bg-card p-6 rounded-lg border border-border mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Edit Meeting</h3>
+        <div className="bg-card p-6 rounded-lg border-2 border-primary/30 shadow-lg mb-6 animate-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">
+              ✏️ Editing: {editingMeeting.title}
+            </h3>
+            <button
+              onClick={handleCancelEdit}
+              className="text-muted-foreground hover:text-foreground text-sm"
+            >
+              ✕ Close
+            </button>
+          </div>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Meeting Title</label>
@@ -484,12 +498,16 @@ export default function MeetingsPage() {
           data?.meetings.map((meeting) => (
             <div
               key={meeting.id}
-              className="p-6 border rounded-lg bg-card hover:shadow-md transition-shadow cursor-pointer"
+              className="p-6 border rounded-lg bg-card hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
               onClick={() => handleEditMeeting(meeting)}
+              title="Click to edit this meeting"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground">{meeting.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {meeting.title}
+                    <span className="ml-2 text-xs text-muted-foreground group-hover:text-primary/70">✏️ Click to edit</span>
+                  </h3>
                   {meeting.meeting_date && (
                     <p className="text-sm text-muted-foreground mt-1">
                       {formatDateTime(meeting.meeting_date)}
