@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Contact, CreateContactInput, UpdateContactInput, ContactInfo, CreateContactInfoInput } from '@/types/database'
+import { ContactService } from '@/services/ContactService'
+import { ContactInfoService } from '@/services/ContactInfoService'
 
 interface ContactFormProps {
   contact?: Contact
@@ -52,26 +54,23 @@ export default function ContactForm({ contact, onSave, onCancel, isLoading = fal
 
   const loadContactInfo = async (contactId: string) => {
     try {
-      const response = await fetch(`/api/contacts/${contactId}/contact-info`)
-      if (response.ok) {
-        const contactInfoData: ContactInfo[] = await response.json()
+      const contactInfoData = await ContactInfoService.getByContactId(contactId)
 
-        // Find primary contact info for each type
-        const primaryPhone = contactInfoData.find(ci => ci.type === 'phone' && ci.is_primary)
-        const primaryEmail = contactInfoData.find(ci => ci.type === 'email' && ci.is_primary)
-        const primaryAddress = contactInfoData.find(ci => ci.type === 'address' && ci.is_primary)
+      // Find primary contact info for each type
+      const primaryPhone = contactInfoData.find(ci => ci.type === 'phone' && ci.is_primary)
+      const primaryEmail = contactInfoData.find(ci => ci.type === 'email' && ci.is_primary)
+      const primaryAddress = contactInfoData.find(ci => ci.type === 'address' && ci.is_primary)
 
-        // If no primary, use the first one of each type
-        const phone = primaryPhone || contactInfoData.find(ci => ci.type === 'phone')
-        const email = primaryEmail || contactInfoData.find(ci => ci.type === 'email')
-        const address = primaryAddress || contactInfoData.find(ci => ci.type === 'address')
+      // If no primary, use the first one of each type
+      const phone = primaryPhone || contactInfoData.find(ci => ci.type === 'phone')
+      const email = primaryEmail || contactInfoData.find(ci => ci.type === 'email')
+      const address = primaryAddress || contactInfoData.find(ci => ci.type === 'address')
 
-        setContactInfo({
-          phone: phone?.value || '',
-          email: email?.value || '',
-          address: address?.value || ''
-        })
-      }
+      setContactInfo({
+        phone: phone?.value || '',
+        email: email?.value || '',
+        address: address?.value || ''
+      })
     } catch (error) {
       console.error('Error loading contact info:', error)
     }
@@ -134,23 +133,15 @@ export default function ContactForm({ contact, onSave, onCancel, isLoading = fal
     }
 
     try {
-      const method = contact ? 'PUT' : 'POST'
-      const url = contact ? `/api/contacts/${contact.id}` : '/api/contacts'
+      let savedContact: Contact
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to save contact')
+      if (contact) {
+        // Update existing contact
+        savedContact = await ContactService.update(contact.id, formData as UpdateContactInput)
+      } else {
+        // Create new contact
+        savedContact = await ContactService.create(formData)
       }
-
-      const savedContact = await response.json()
 
       // Save contact info
       await saveContactInfo(savedContact.id)
@@ -197,25 +188,27 @@ export default function ContactForm({ contact, onSave, onCancel, isLoading = fal
     value: string,
     label: 'home' | 'work' | 'mobile' | 'other'
   ) => {
-    const response = await fetch(`/api/contacts/${contactId}/contact-info`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    // First, try to update existing contact info of this type, or create new if not exists
+    const existingContactInfo = await ContactInfoService.getByContactId(contactId)
+    const existingItem = existingContactInfo.find(ci => ci.type === type)
+
+    if (existingItem) {
+      // Update existing contact info
+      return await ContactInfoService.update(existingItem.id, {
+        value,
+        label,
+        is_primary: true
+      })
+    } else {
+      // Create new contact info
+      return await ContactInfoService.create({
+        contact_id: contactId,
         type,
         value,
         label,
         is_primary: true
-      }),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || `Failed to save ${type}`)
+      })
     }
-
-    return response.json()
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
