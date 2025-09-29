@@ -31,6 +31,15 @@ export default function WeddingPage() {
   const [guestFilter, setGuestFilter] = useState<'all' | 'pending' | 'attending' | 'not_attending' | 'maybe'>('all')
   const [inviteFilter, setInviteFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [showAddInviteForm, setShowAddInviteForm] = useState(false)
+  const [newInvite, setNewInvite] = useState({
+    name: '',
+    address: '',
+    category: '',
+    likeliness_to_come: 3,
+    invite_status: 'Not contacted' as const,
+    notes: ''
+  })
 
   useEffect(() => {
     if (activeTab === 'rsvps') {
@@ -113,6 +122,40 @@ export default function WeddingPage() {
       loadInviteData()
     } catch (error) {
       console.error('Failed to delete invite:', error)
+    }
+  }
+
+  const handleAddInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newInvite.name.trim()) {
+      alert('Name is required')
+      return
+    }
+
+    try {
+      await WeddingInviteService.create({
+        name: newInvite.name,
+        address: newInvite.address || undefined,
+        category: newInvite.category || undefined,
+        likeliness_to_come: newInvite.likeliness_to_come,
+        invite_status: newInvite.invite_status,
+        notes: newInvite.notes || undefined
+      })
+
+      // Reset form
+      setNewInvite({
+        name: '',
+        address: '',
+        category: '',
+        likeliness_to_come: 3,
+        invite_status: 'Not contacted',
+        notes: ''
+      })
+      setShowAddInviteForm(false)
+      loadInviteData()
+    } catch (error) {
+      console.error('Failed to add invite:', error)
+      alert('Failed to add invite. Please try again.')
     }
   }
 
@@ -322,6 +365,128 @@ export default function WeddingPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Add Invite Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowAddInviteForm(!showAddInviteForm)}
+              className="px-4 py-2 bg-tertiary text-white rounded-lg hover:bg-tertiary/90 transition-colors"
+            >
+              {showAddInviteForm ? 'Cancel' : '+ Add Guest'}
+            </button>
+          </div>
+
+          {/* Add Invite Form */}
+          {showAddInviteForm && (
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-4">Add New Guest</h3>
+              <form onSubmit={handleAddInvite} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newInvite.name}
+                      onChange={(e) => setNewInvite({ ...newInvite, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      value={newInvite.address}
+                      onChange={(e) => setNewInvite({ ...newInvite, address: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={newInvite.category}
+                      onChange={(e) => setNewInvite({ ...newInvite, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+                    >
+                      <option value="">Select category</option>
+                      <option value="ES Friends">ES Friends</option>
+                      <option value="Family">Family</option>
+                      <option value="MEX Friends">MEX Friends</option>
+                      <option value="UK Friends">UK Friends</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Likeliness to Come (0-5)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="5"
+                      value={newInvite.likeliness_to_come}
+                      onChange={(e) => setNewInvite({ ...newInvite, likeliness_to_come: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={newInvite.invite_status}
+                      onChange={(e) => setNewInvite({ ...newInvite, invite_status: e.target.value as any })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+                    >
+                      <option value="Not contacted">Not contacted</option>
+                      <option value="Contacted - awaiting response">Contacted - awaiting response</option>
+                      <option value="Confirmed attending">Confirmed attending</option>
+                      <option value="Confirmed not attending">Confirmed not attending</option>
+                      <option value="No response">No response</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={newInvite.notes}
+                      onChange={(e) => setNewInvite({ ...newInvite, notes: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tertiary"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddInviteForm(false)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-tertiary text-white rounded-lg hover:bg-tertiary/90"
+                  >
+                    Add Guest
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
