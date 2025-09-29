@@ -12,7 +12,9 @@ interface ContactFormProps {
   isLoading?: boolean
 }
 
-export default function ContactForm({ contact, onSave, onCancel, isLoading = false }: ContactFormProps) {
+export default function ContactForm({ contact, onSave, onCancel, isLoading: externalLoading = false }: ContactFormProps) {
+  const [internalLoading, setInternalLoading] = useState(false)
+  const isLoading = externalLoading || internalLoading
   const [formData, setFormData] = useState<CreateContactInput>({
     first_name: '',
     last_name: '',
@@ -133,23 +135,32 @@ export default function ContactForm({ contact, onSave, onCancel, isLoading = fal
     }
 
     try {
+      setInternalLoading(true)
+      setErrors({}) // Clear any previous errors
+
       let savedContact: Contact
 
       if (contact) {
         // Update existing contact
+        console.log('Updating contact with data:', formData)
         savedContact = await ContactService.update(contact.id, formData as UpdateContactInput)
       } else {
         // Create new contact
+        console.log('Creating contact with data:', formData)
         savedContact = await ContactService.create(formData)
       }
 
       // Save contact info
+      console.log('Saving contact info:', contactInfo)
       await saveContactInfo(savedContact.id)
 
+      console.log('Contact saved successfully:', savedContact)
       onSave(savedContact)
     } catch (error) {
       console.error('Error saving contact:', error)
       setErrors({ submit: error instanceof Error ? error.message : 'Failed to save contact' })
+    } finally {
+      setInternalLoading(false)
     }
   }
 
@@ -480,21 +491,34 @@ export default function ContactForm({ contact, onSave, onCancel, isLoading = fal
       </div>
 
       {errors.submit && (
-        <div className="text-red-600 text-sm">{errors.submit}</div>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-card p-3 text-destructive text-sm">
+          <strong>Error:</strong> {errors.submit}
+        </div>
       )}
 
-      <div className="flex justify-end space-x-3">
+      {Object.keys(errors).length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-card p-3 text-yellow-800 text-sm">
+          Please fix the following errors before saving:
+          <ul className="mt-1 list-disc list-inside">
+            {Object.entries(errors).filter(([key]) => key !== 'submit').map(([field, error]) => (
+              <li key={field}>{field.replace('_', ' ')}: {error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 border-t border-border">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-muted-foreground bg-background border border-border rounded-card hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
           disabled={isLoading}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full sm:w-auto px-6 py-3 text-sm font-medium text-primary-foreground bg-primary border border-transparent rounded-card hover:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-colors"
           disabled={isLoading}
         >
           {isLoading ? 'Saving...' : contact ? 'Update Contact' : 'Create Contact'}
