@@ -9,10 +9,10 @@ export default function MobileBottomNav() {
   const navItems = [
     {
       href: '/',
-      label: 'Home',
+      label: 'Dashboard',
       icon: (
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
         </svg>
       )
     },
@@ -26,16 +26,6 @@ export default function MobileBottomNav() {
       )
     },
     {
-      href: '/add',
-      label: 'Add',
-      icon: (
-        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-      ),
-      isAdd: true
-    },
-    {
       href: '/tasks',
       label: 'Tasks',
       icon: (
@@ -45,11 +35,11 @@ export default function MobileBottomNav() {
       )
     },
     {
-      href: '/profile',
-      label: 'Profile',
+      href: '/shopping',
+      label: 'Lists',
       icon: (
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7ZM9 8V17H11V8H9ZM13 8V17H15V8H13Z"/>
         </svg>
       )
     },
@@ -57,7 +47,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-      <div className="grid grid-cols-5 h-16">
+      <div className="grid grid-cols-4 h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href
 
@@ -66,9 +56,7 @@ export default function MobileBottomNav() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
-                item.isAdd
-                  ? 'text-white bg-tertiary rounded-full mx-3 my-2'
-                  : isActive
+                isActive
                   ? 'text-tertiary'
                   : 'text-gray-400 hover:text-gray-600'
               }`}
