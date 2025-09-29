@@ -23,7 +23,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             <Link href="/" className="text-xl font-bold text-foreground hover:text-primary transition-colors">
-              Personal CRM
+              Will Ford
             </Link>
             <div className="flex space-x-2">
               {navItems.map((item) => (

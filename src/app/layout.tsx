@@ -4,7 +4,7 @@ import MobileLayout from '@/components/MobileLayout'
 import Providers from '@/components/Providers'
 
 export const metadata: Metadata = {
-  title: 'Personal CRM',
+  title: 'Will Ford',
   description: 'Manage your personal relationships and stay connected',
   icons: {
     icon: '/people/favicon.ico',

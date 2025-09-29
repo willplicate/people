@@ -7,7 +7,7 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({
-  title = "RelationCare",
+  title = "Will Ford",
   showMenu = true,
   onMenuClick
 }: MobileHeaderProps) {
