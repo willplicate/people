@@ -64,24 +64,32 @@ export class AutomatedReminderService {
       return false // Reminder already exists or was recently dismissed
     }
 
-    // Only create reminders that are due within the next 7 days
+    // Create reminders that are due within the next 7 days OR are already overdue
     const now = new Date()
     const daysUntilReminder = Math.ceil(
       (nextReminderDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     )
 
-    if (daysUntilReminder > 7 || daysUntilReminder < 0) {
-      return false // Too far in future or overdue (overdue handled separately)
+    if (daysUntilReminder > 7) {
+      return false // Too far in future - don't create yet
     }
 
-    // Create the reminder
-    const message = ReminderCalculatorService.generateReminderMessage(contact)
+    // For overdue reminders, create them immediately with current date
+    let reminderDate = nextReminderDate
+    if (daysUntilReminder < 0) {
+      // Contact is overdue - create reminder for today so it shows up immediately
+      reminderDate = now
+    }
+
+    // Create the reminder with overdue information if applicable
+    const daysOverdue = daysUntilReminder < 0 ? Math.abs(daysUntilReminder) : 0
+    const message = ReminderCalculatorService.generateReminderMessage(contact, daysOverdue)
 
     try {
       await ReminderService.create({
         contact_id: contact.id,
         type: 'communication',
-        scheduled_for: nextReminderDate.toISOString(),
+        scheduled_for: reminderDate.toISOString(),
         message: message
       })
       return true
