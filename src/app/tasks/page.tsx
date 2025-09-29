@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PersonalTask } from '@/types/database'
+import { PersonalTaskService } from '@/services/PersonalTaskService'
+import { UrgentTaskService } from '@/services/UrgentTaskService'
 import HabitTracker from '@/components/HabitTracker'
 
 interface TasksPageData {
@@ -58,7 +60,9 @@ export default function TasksPage() {
 
   const cleanupOldTasks = async () => {
     try {
-      await fetch('/api/tasks/cleanup', { method: 'POST' })
+      // Cleanup old completed tasks locally - remove tasks completed more than 24 hours ago
+      // This could be implemented in PersonalTaskService if needed
+      console.log('Cleanup old tasks - placeholder')
     } catch (err) {
       console.warn('Failed to cleanup old tasks:', err)
     }
@@ -67,35 +71,46 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams()
+
+      // Get all tasks and filter them client-side
+      const allTasks = await PersonalTaskService.getAll()
+
+      // Apply filters
+      let filteredTasks = allTasks
 
       if (statusFilter !== 'all') {
-        params.append('status', statusFilter)
+        filteredTasks = filteredTasks.filter(task => task.status === statusFilter)
       }
+
       if (priorityFilter !== 'all') {
-        params.append('priority', priorityFilter)
+        filteredTasks = filteredTasks.filter(task => task.priority === priorityFilter)
       }
+
       if (searchQuery) {
-        params.append('search', searchQuery)
+        const query = searchQuery.toLowerCase()
+        filteredTasks = filteredTasks.filter(task =>
+          task.title.toLowerCase().includes(query) ||
+          (task.description && task.description.toLowerCase().includes(query))
+        )
       }
 
-      const [tasksResponse, statsResponse] = await Promise.all([
-        fetch(`/api/tasks?${params}`),
-        fetch('/api/tasks/stats')
-      ])
-
-      if (!tasksResponse.ok) throw new Error('Failed to fetch tasks')
-
-      const tasksData = await tasksResponse.json()
-      let stats = { total: 0, todo: 0, inProgress: 0, completed: 0, overdue: 0, dueToday: 0 }
-
-      if (statsResponse.ok) {
-        stats = await statsResponse.json()
+      // Calculate stats
+      const stats = {
+        total: allTasks.length,
+        todo: allTasks.filter(t => t.status === 'todo').length,
+        inProgress: allTasks.filter(t => t.status === 'in_progress').length,
+        completed: allTasks.filter(t => t.status === 'completed').length,
+        overdue: allTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length,
+        dueToday: allTasks.filter(t => {
+          if (!t.due_date || t.status === 'completed') return false
+          const today = new Date().toDateString()
+          return new Date(t.due_date).toDateString() === today
+        }).length
       }
 
       setData({
-        tasks: tasksData.tasks,
-        totalCount: tasksData.totalCount,
+        tasks: filteredTasks,
+        totalCount: filteredTasks.length,
         stats
       })
     } catch (err) {
@@ -107,16 +122,10 @@ export default function TasksPage() {
 
   const handleCreateTask = async () => {
     try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newTask,
-          due_date: newTask.due_date || undefined
-        })
+      await PersonalTaskService.create({
+        ...newTask,
+        due_date: newTask.due_date || undefined
       })
-
-      if (!response.ok) throw new Error('Failed to create task')
 
       setNewTask({
         title: '',
@@ -141,19 +150,13 @@ export default function TasksPage() {
     if (!editingTask) return
 
     try {
-      const response = await fetch(`/api/tasks/${editingTask.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: editingTask.title,
-          description: editingTask.description,
-          priority: editingTask.priority,
-          category: editingTask.category,
-          due_date: editingTask.due_date || undefined
-        })
+      await PersonalTaskService.update(editingTask.id, {
+        title: editingTask.title,
+        description: editingTask.description,
+        priority: editingTask.priority,
+        category: editingTask.category,
+        due_date: editingTask.due_date || undefined
       })
-
-      if (!response.ok) throw new Error('Failed to update task')
 
       setEditingTask(null)
       fetchTasks()
@@ -169,16 +172,10 @@ export default function TasksPage() {
   const handleToggleTaskStatus = async (task: PersonalTask) => {
     try {
       const newStatus = task.status === 'completed' ? 'todo' : 'completed'
-      const response = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: newStatus,
-          completed_at: newStatus === 'completed' ? new Date().toISOString() : undefined
-        })
+      await PersonalTaskService.update(task.id, {
+        status: newStatus,
+        completed_at: newStatus === 'completed' ? new Date().toISOString() : undefined
       })
-
-      if (!response.ok) throw new Error('Failed to update task')
       fetchTasks()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task')
@@ -189,11 +186,7 @@ export default function TasksPage() {
     if (!confirm('Are you sure you want to delete this task?')) return
 
     try {
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) throw new Error('Failed to delete task')
+      await PersonalTaskService.delete(taskId)
       fetchTasks()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task')
@@ -202,23 +195,22 @@ export default function TasksPage() {
 
   const handleMoveToUrgent = async (task: PersonalTask) => {
     try {
-      const response = await fetch('/api/urgent-tasks/move-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          taskId: task.id,
-          title: task.title,
-          description: task.description
-        })
+      // Create urgent task
+      await UrgentTaskService.create({
+        title: task.title,
+        description: task.description || '',
+        priority: 'urgent',
+        target_completion: new Date().toISOString() // Due today
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to move task to urgent')
-      }
+      // Optionally delete the original task or mark as moved
+      await PersonalTaskService.delete(task.id)
 
-      // Show success message and optionally navigate to urgent tasks
+      // Show success message
       alert('Task moved to urgent list!')
+
+      // Refresh tasks
+      fetchTasks()
 
       // Optional: Navigate to urgent tasks page
       // router.push('/urgent-tasks')
