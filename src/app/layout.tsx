@@ -7,8 +7,9 @@ export const metadata: Metadata = {
   title: 'Personal CRM',
   description: 'Manage your personal relationships and stay connected',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon-32x32.png',
+    icon: '/people/favicon.ico',
+    apple: '/people/favicon-32x32.png',
+    shortcut: '/people/favicon-16x16.png',
   },
 }
 
