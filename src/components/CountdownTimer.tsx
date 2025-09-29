@@ -138,14 +138,26 @@ export default function CountdownTimer({ className = '' }: CountdownTimerProps) 
           state.timeLeft === 0 ? (
             <button
               onClick={handleReset}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-medium"
+              className="px-4 py-2 rounded font-medium border-2 border-blue-600"
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                minHeight: '40px',
+                minWidth: '100px'
+              }}
             >
               Reset Timer
             </button>
           ) : (
             <button
               onClick={handleStart}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium"
+              className="px-4 py-2 rounded font-medium border-2 border-green-600"
+              style={{
+                backgroundColor: '#16a34a',
+                color: '#ffffff',
+                minHeight: '40px',
+                minWidth: '80px'
+              }}
             >
               Start
             </button>
@@ -153,14 +165,26 @@ export default function CountdownTimer({ className = '' }: CountdownTimerProps) 
         ) : (
           <button
             onClick={handlePause}
-            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-medium"
+            className="px-4 py-2 rounded font-medium border-2 border-yellow-600"
+            style={{
+              backgroundColor: '#ca8a04',
+              color: '#ffffff',
+              minHeight: '40px',
+              minWidth: '80px'
+            }}
           >
             Pause
           </button>
         )}
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
+          className="px-4 py-2 rounded font-medium border-2 border-gray-600"
+          style={{
+            backgroundColor: '#6b7280',
+            color: '#ffffff',
+            minHeight: '40px',
+            minWidth: '80px'
+          }}
         >
           Reset
         </button>
