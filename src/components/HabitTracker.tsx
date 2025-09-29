@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Habit, CreateHabitInput, UpdateHabitInput } from '@/types/database'
+import { HabitService, HabitCompletionService } from '@/services/HabitService'
 import HabitItem from './HabitItem'
 import HabitForm from './HabitForm'
 
@@ -22,13 +23,8 @@ export default function HabitTracker() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/habits?today=true')
-      if (!response.ok) {
-        throw new Error('Failed to fetch habits')
-      }
-
-      const data = await response.json()
-      setHabits(data.habits || [])
+      const habitsWithStatus = await HabitService.getTodaysHabitsWithStatus()
+      setHabits(habitsWithStatus)
     } catch (err) {
       console.error('Error fetching habits:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch habits')
@@ -43,25 +39,13 @@ export default function HabitTracker() {
     try {
       if (isCompleted) {
         // Mark as completed
-        const response = await fetch(`/api/habits/${habitId}/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ completed_date: today })
+        await HabitCompletionService.complete({
+          habit_id: habitId,
+          completed_date: today
         })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Failed to complete habit')
-        }
       } else {
         // Mark as incomplete
-        const response = await fetch(`/api/habits/${habitId}/complete?date=${today}`, {
-          method: 'DELETE'
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to uncomplete habit')
-        }
+        await HabitCompletionService.uncomplete(habitId, today)
       }
 
       // Update local state
@@ -82,16 +66,7 @@ export default function HabitTracker() {
     try {
       setFormLoading(true)
 
-      const response = await fetch('/api/habits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create habit')
-      }
+      await HabitService.create(data)
 
       setShowForm(false)
       await fetchTodaysHabits() // Refresh the list
@@ -109,16 +84,7 @@ export default function HabitTracker() {
     try {
       setFormLoading(true)
 
-      const response = await fetch(`/api/habits/${editingHabit.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to update habit')
-      }
+      await HabitService.update(editingHabit.id, data)
 
       setEditingHabit(null)
       await fetchTodaysHabits() // Refresh the list
@@ -136,14 +102,7 @@ export default function HabitTracker() {
     }
 
     try {
-      const response = await fetch(`/api/habits/${habitId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete habit')
-      }
-
+      await HabitService.delete(habitId)
       await fetchTodaysHabits() // Refresh the list
     } catch (error) {
       console.error('Error deleting habit:', error)
