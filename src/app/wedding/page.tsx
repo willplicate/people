@@ -597,15 +597,18 @@ export default function WeddingPage() {
       {/* RSVP Site Link */}
       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h3 className="font-semibold text-blue-900">Public RSVP Website</h3>
             <p className="text-sm text-blue-700 mt-1">Share this link with your guests</p>
+            <p className="text-sm text-blue-900 mt-2 font-mono bg-blue-100 px-2 py-1 rounded inline-block select-all">
+              https://allyouneedisalightjacket.com
+            </p>
           </div>
           <a
             href="https://allyouneedisalightjacket.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap ml-4"
           >
             View Site
           </a>
