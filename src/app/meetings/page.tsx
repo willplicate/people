@@ -16,6 +16,8 @@ export default function MeetingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  const [selectedAttendee, setSelectedAttendee] = useState<string | null>(null)
+  const [allAttendees, setAllAttendees] = useState<string[]>([])
   const [showNewMeetingForm, setShowNewMeetingForm] = useState(false)
   const [editingMeeting, setEditingMeeting] = useState<MeetingAgenda | null>(null)
   const [showQuickTaskForm, setShowQuickTaskForm] = useState(false)
@@ -56,19 +58,54 @@ export default function MeetingsPage() {
   const fetchMeetings = useCallback(async () => {
     try {
       setLoading(true)
-      const meetings = await MeetingAgendaService.getAll({
-        search: debouncedSearchQuery || undefined
+
+      // Fetch all meetings first
+      const allMeetings = await MeetingAgendaService.getAll()
+
+      // Extract unique attendees from all meetings
+      const attendeesSet = new Set<string>()
+      allMeetings.forEach(meeting => {
+        meeting.attendees.forEach(attendee => {
+          if (attendee.trim()) {
+            attendeesSet.add(attendee.trim())
+          }
+        })
       })
+      setAllAttendees(Array.from(attendeesSet).sort())
+
+      // Filter meetings based on search and selected attendee
+      let filteredMeetings = allMeetings
+
+      // Filter by text search
+      if (debouncedSearchQuery) {
+        const searchLower = debouncedSearchQuery.toLowerCase()
+        filteredMeetings = filteredMeetings.filter(meeting =>
+          meeting.title.toLowerCase().includes(searchLower) ||
+          meeting.agenda?.toLowerCase().includes(searchLower) ||
+          meeting.notes?.toLowerCase().includes(searchLower) ||
+          meeting.attendees.some(attendee =>
+            attendee.toLowerCase().includes(searchLower)
+          )
+        )
+      }
+
+      // Filter by selected attendee
+      if (selectedAttendee) {
+        filteredMeetings = filteredMeetings.filter(meeting =>
+          meeting.attendees.includes(selectedAttendee)
+        )
+      }
+
       setData({
-        meetings,
-        totalCount: meetings.length
+        meetings: filteredMeetings,
+        totalCount: filteredMeetings.length
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch meetings')
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearchQuery])
+  }, [debouncedSearchQuery, selectedAttendee])
 
   useEffect(() => {
     fetchMeetings()
@@ -242,6 +279,76 @@ export default function MeetingsPage() {
           className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground"
         />
       </div>
+
+      {/* Attendee Filter Cards */}
+      {allAttendees.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground">Filter by Attendee:</h3>
+            {selectedAttendee && (
+              <button
+                onClick={() => setSelectedAttendee(null)}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {allAttendees.map((attendee) => {
+              const isSelected = selectedAttendee === attendee
+              // Count meetings with this attendee, considering current text search
+              let meetingCount = 0
+              if (data?.meetings) {
+                if (isSelected) {
+                  // If this attendee is selected, show current filtered count
+                  meetingCount = data.meetings.length
+                } else {
+                  // If not selected, count how many meetings this attendee would show
+                  // (considering text search but ignoring attendee filter)
+                  meetingCount = data.meetings.filter(m => {
+                    // Include if no attendee filter is active, or if we're counting for this specific attendee
+                    return !selectedAttendee && m.attendees.includes(attendee)
+                  }).length
+
+                  // If we have a text search active, we need to get the count from unfiltered data
+                  if (debouncedSearchQuery && !selectedAttendee) {
+                    // This is a simplification - we show the visible count
+                    meetingCount = data.meetings.filter(m => m.attendees.includes(attendee)).length
+                  }
+                }
+              }
+
+              return (
+                <button
+                  key={attendee}
+                  onClick={() => setSelectedAttendee(isSelected ? null : attendee)}
+                  className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isSelected
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-secondary/20 text-secondary-foreground hover:bg-secondary/30 border border-secondary/40'
+                  }`}
+                >
+                  <span className="mr-1">👤</span>
+                  {attendee}
+                  <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${
+                    isSelected
+                      ? 'bg-primary-foreground/20 text-primary-foreground'
+                      : 'bg-secondary/40 text-secondary-foreground'
+                  }`}>
+                    {meetingCount}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          {selectedAttendee && (
+            <div className="mt-2 text-xs text-muted-foreground">
+              Showing {data?.meetings.length || 0} meeting{(data?.meetings.length || 0) !== 1 ? 's' : ''} with <strong>{selectedAttendee}</strong>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Quick Task Form */}
       {showQuickTaskForm && (
@@ -500,8 +607,10 @@ export default function MeetingsPage() {
       <div className="space-y-4">
         {data?.meetings.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            {debouncedSearchQuery
-              ? 'No meetings found matching your search.'
+            {debouncedSearchQuery || selectedAttendee
+              ? `No meetings found ${debouncedSearchQuery ? 'matching your search' : ''}${
+                  debouncedSearchQuery && selectedAttendee ? ' and ' : ''
+                }${selectedAttendee ? `with ${selectedAttendee}` : ''}.`
               : 'No meetings yet. Create your first meeting!'}
           </div>
         ) : (
