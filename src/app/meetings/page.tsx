@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { MeetingAgenda, CreateMeetingAgendaInput } from '@/types/database'
 import { MeetingAgendaService } from '@/services/MeetingAgendaService'
 import { PersonalTaskService } from '@/services/PersonalTaskService'
@@ -15,6 +15,7 @@ export default function MeetingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [showNewMeetingForm, setShowNewMeetingForm] = useState(false)
   const [editingMeeting, setEditingMeeting] = useState<MeetingAgenda | null>(null)
   const [showQuickTaskForm, setShowQuickTaskForm] = useState(false)
@@ -43,11 +44,20 @@ export default function MeetingsPage() {
 
   const [attendeeInput, setAttendeeInput] = useState('')
 
+  // Debounce search query to avoid triggering search on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300) // 300ms delay
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   const fetchMeetings = useCallback(async () => {
     try {
       setLoading(true)
       const meetings = await MeetingAgendaService.getAll({
-        search: searchQuery || undefined
+        search: debouncedSearchQuery || undefined
       })
       setData({
         meetings,
@@ -58,7 +68,7 @@ export default function MeetingsPage() {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery])
+  }, [debouncedSearchQuery])
 
   useEffect(() => {
     fetchMeetings()
@@ -490,7 +500,7 @@ export default function MeetingsPage() {
       <div className="space-y-4">
         {data?.meetings.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            {searchQuery
+            {debouncedSearchQuery
               ? 'No meetings found matching your search.'
               : 'No meetings yet. Create your first meeting!'}
           </div>
