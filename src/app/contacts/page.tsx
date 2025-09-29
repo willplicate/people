@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Contact } from '@/types/database'
+import { ContactService } from '@/services/ContactService'
 import ContactList from '@/components/ContactList'
 import SearchFilter, { FilterOptions } from '@/components/SearchFilter'
 
@@ -49,7 +50,7 @@ export default function ContactsPage() {
     try {
       setIsDeleting(true)
       const deletePromises = Array.from(selectedContacts).map(contactId =>
-        fetch(`/api/contacts/${contactId}`, { method: 'DELETE' })
+        ContactService.delete(contactId)
       )
 
       await Promise.all(deletePromises)
@@ -74,9 +75,8 @@ export default function ContactsPage() {
       setIsUpdatingFrequency(true)
 
       // Fetch all contacts that need date randomization
-      const response = await fetch('/api/contacts')
-      const data = await response.json()
-      const contactsNeedingDates = data.contacts.filter((contact: any) =>
+      const allContacts = await ContactService.getAll()
+      const contactsNeedingDates = allContacts.filter((contact: Contact) =>
         contact.communication_frequency && !contact.last_contacted_at
       )
 
@@ -87,7 +87,7 @@ export default function ContactsPage() {
       }
 
       // Update each contact with a random date
-      const updatePromises = contactsNeedingDates.map((contact: any) => {
+      const updatePromises = contactsNeedingDates.map((contact: Contact) => {
         const frequencyDays = {
           weekly: 7,
           monthly: 30,
@@ -101,14 +101,8 @@ export default function ContactsPage() {
         const randomDate = new Date()
         randomDate.setDate(randomDate.getDate() - randomDaysBack)
 
-        return fetch(`/api/contacts/${contact.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            last_contacted_at: randomDate.toISOString()
-          })
+        return ContactService.update(contact.id, {
+          last_contacted_at: randomDate.toISOString()
         })
       })
 
@@ -160,13 +154,7 @@ export default function ContactsPage() {
           updateData.last_contacted_at = randomDate.toISOString()
         }
 
-        return fetch(`/api/contacts/${contactId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(updateData)
-        })
+        return ContactService.update(contactId, updateData)
       })
 
       await Promise.all(contactUpdates)
@@ -194,14 +182,8 @@ export default function ContactsPage() {
       setIsUpdatingFrequency(true)
 
       const contactUpdates = Array.from(selectedContacts).map(contactId => {
-        return fetch(`/api/contacts/${contactId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            reminders_paused: shouldPause
-          })
+        return ContactService.update(contactId, {
+          reminders_paused: shouldPause
         })
       })
 

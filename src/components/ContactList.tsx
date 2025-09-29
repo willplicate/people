@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Contact, ContactInfo } from '@/types/database'
+import { ContactService } from '@/services/ContactService'
 import { FilterOptions } from './SearchFilter'
 
 interface ContactListProps {
@@ -56,42 +57,67 @@ export default function ContactList({
   const fetchContacts = async (page: number = currentPage) => {
     try {
       setLoading(true)
-      const params = new URLSearchParams()
+
+      // Get all contacts using ContactService
+      const allContacts = await ContactService.getAll()
+
+      // Apply filters
+      let filteredContacts = allContacts
+
+      // Search filter
       if (searchQuery) {
-        params.append('search', searchQuery)
+        filteredContacts = filteredContacts.filter(contact => {
+          const searchTerm = searchQuery.toLowerCase()
+          return (
+            contact.first_name?.toLowerCase().includes(searchTerm) ||
+            contact.last_name?.toLowerCase().includes(searchTerm) ||
+            contact.nickname?.toLowerCase().includes(searchTerm) ||
+            contact.notes?.toLowerCase().includes(searchTerm)
+          )
+        })
       }
+
+      // Christmas list filter
       if (filters.christmasList !== undefined) {
-        params.append('christmasList', filters.christmasList.toString())
+        filteredContacts = filteredContacts.filter(contact =>
+          contact.christmas_list === filters.christmasList
+        )
       }
+
+      // Communication frequency filter
       if (filters.communicationFrequency) {
-        params.append('communicationFrequency', filters.communicationFrequency)
+        filteredContacts = filteredContacts.filter(contact =>
+          contact.communication_frequency === filters.communicationFrequency
+        )
       }
+
+      // Reminders paused filter
       if (filters.remindersPaused !== undefined) {
-        params.append('remindersPaused', filters.remindersPaused.toString())
+        filteredContacts = filteredContacts.filter(contact =>
+          contact.reminders_paused === filters.remindersPaused
+        )
       }
+
+      // No frequency filter
       if (filters.noFrequency !== undefined) {
-        params.append('noFrequency', filters.noFrequency.toString())
+        filteredContacts = filteredContacts.filter(contact => {
+          const hasNoFreq = !contact.communication_frequency
+          return hasNoFreq === filters.noFrequency
+        })
       }
 
-      // Add pagination parameters
-      params.append('limit', pageSize.toString())
-      params.append('offset', ((page - 1) * pageSize).toString())
-
-      const response = await fetch(`/api/contacts?${params}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch contacts')
-      }
-
-      const data = await response.json()
-      const contactsData = data.contacts || []
-      const totalCount = data.totalCount || contactsData.length
-
+      const totalCount = filteredContacts.length
       setTotalCount(totalCount)
-      setHasNextPage(contactsData.length === pageSize)
 
-      // For now, skip contact info loading to improve performance
-      // We can add contact info later with proper batch loading or joins
-      const processedContacts = contactsData.map((contact: Contact) => ({
+      // Apply pagination
+      const startIndex = (page - 1) * pageSize
+      const endIndex = startIndex + pageSize
+      const paginatedContacts = filteredContacts.slice(startIndex, endIndex)
+
+      setHasNextPage(endIndex < totalCount)
+
+      // Process contacts without contact info for now (performance)
+      const processedContacts = paginatedContacts.map((contact: Contact) => ({
         ...contact,
         contactInfo: {} // Empty for now - improves performance dramatically
       }))
@@ -100,7 +126,7 @@ export default function ContactList({
 
       // Notify parent of loaded contact IDs for select all functionality
       if (onContactsLoaded) {
-        onContactsLoaded(contactsData.map((contact: Contact) => contact.id))
+        onContactsLoaded(processedContacts.map((contact: Contact) => contact.id))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch contacts')
