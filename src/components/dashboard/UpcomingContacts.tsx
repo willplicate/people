@@ -17,8 +17,38 @@ export default function UpcomingContacts() {
   useEffect(() => {
     async function loadContacts() {
       try {
-        const needingAttention = await DashboardService.getContactsNeedingAttention()
-        setContacts(needingAttention.overdueReminders.slice(0, 3))
+        // Get both overdue and upcoming reminders
+        const [needingAttention, upcomingReminders] = await Promise.all([
+          DashboardService.getContactsNeedingAttention(),
+          DashboardService.getUpcomingReminders(7) // Next 7 days
+        ])
+
+        // Combine overdue and upcoming reminders
+        const allRelevantContacts: ContactWithReminder[] = [
+          ...needingAttention.overdueReminders,
+          ...upcomingReminders.map(item => ({
+            contact: item.contact,
+            reminder: item.reminder,
+            daysOverdue: Math.floor((Date.now() - new Date(item.reminder.scheduled_for).getTime()) / (1000 * 60 * 60 * 24))
+          }))
+        ]
+
+        // Remove duplicates and sort by urgency (most overdue first, then soonest due)
+        const uniqueContacts = allRelevantContacts
+          .filter((item, index, arr) =>
+            arr.findIndex(other => other.contact.id === item.contact.id) === index
+          )
+          .sort((a, b) => {
+            // Overdue items first (positive daysOverdue)
+            if (a.daysOverdue > 0 && b.daysOverdue <= 0) return -1
+            if (b.daysOverdue > 0 && a.daysOverdue <= 0) return 1
+            // Among overdue items, most overdue first
+            if (a.daysOverdue > 0 && b.daysOverdue > 0) return b.daysOverdue - a.daysOverdue
+            // Among upcoming items, soonest first (least negative)
+            return a.daysOverdue - b.daysOverdue
+          })
+
+        setContacts(uniqueContacts.slice(0, 5)) // Show top 5
       } catch (error) {
         console.error('Failed to load contacts:', error)
       } finally {
@@ -75,8 +105,19 @@ export default function UpcomingContacts() {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-destructive">
-                  {item.daysOverdue} days overdue
+                <span className={`text-sm font-medium ${
+                  item.daysOverdue > 0
+                    ? 'text-destructive'
+                    : item.daysOverdue === 0
+                      ? 'text-orange-600'
+                      : 'text-blue-600'
+                }`}>
+                  {item.daysOverdue > 0
+                    ? `${item.daysOverdue} days overdue`
+                    : item.daysOverdue === 0
+                      ? 'Due today'
+                      : `Due in ${Math.abs(item.daysOverdue)} days`
+                  }
                 </span>
                 <button className="text-gray-400 hover:text-gray-600">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

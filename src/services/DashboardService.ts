@@ -327,6 +327,23 @@ export class DashboardService {
   }
 
   /**
+   * Get upcoming reminders with contact info
+   */
+  static async getUpcomingReminders(daysAhead: number = 7): Promise<Array<{ contact: Contact; reminder: Reminder }>> {
+    const [contacts, reminders] = await Promise.all([
+      ContactService.getAll(),
+      ReminderService.getUpcomingReminders(daysAhead)
+    ])
+
+    return reminders
+      .map(reminder => {
+        const contact = contacts.find(c => c.id === reminder.contact_id)
+        return contact ? { contact, reminder } : null
+      })
+      .filter((item): item is { contact: Contact; reminder: Reminder } => item !== null)
+  }
+
+  /**
    * Get contacts that need attention (overdue reminders, no recent contact, etc.)
    */
   static async getContactsNeedingAttention(): Promise<{
