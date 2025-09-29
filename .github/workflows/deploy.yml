@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "main", "019-clean-deploy", "020-github-deploy" ]
+    branches: [ "main", "master", "019-clean-deploy", "020-github-deploy" ]
   workflow_dispatch:
 
 permissions:
