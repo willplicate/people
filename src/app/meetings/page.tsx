@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { MeetingAgenda, CreateMeetingAgendaInput } from '@/types/database'
+import { MeetingAgendaService } from '@/services/MeetingAgendaService'
+import { PersonalTaskService } from '@/services/PersonalTaskService'
 
 interface MeetingsPageData {
   meetings: MeetingAgenda[]
@@ -44,17 +46,13 @@ export default function MeetingsPage() {
   const fetchMeetings = useCallback(async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams()
-
-      if (searchQuery) {
-        params.append('search', searchQuery)
-      }
-
-      const response = await fetch(`/api/meetings?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch meetings')
-
-      const meetingsData = await response.json()
-      setData(meetingsData)
+      const meetings = await MeetingAgendaService.getAll({
+        search: searchQuery || undefined
+      })
+      setData({
+        meetings,
+        totalCount: meetings.length
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch meetings')
     } finally {
@@ -68,16 +66,10 @@ export default function MeetingsPage() {
 
   const handleCreateMeeting = async () => {
     try {
-      const response = await fetch('/api/meetings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newMeeting,
-          meeting_date: newMeeting.meeting_date || undefined
-        })
+      await MeetingAgendaService.create({
+        ...newMeeting,
+        meeting_date: newMeeting.meeting_date || undefined
       })
-
-      if (!response.ok) throw new Error('Failed to create meeting')
 
       setNewMeeting({
         title: '',
@@ -100,21 +92,15 @@ export default function MeetingsPage() {
     if (!editingMeeting) return
 
     try {
-      const response = await fetch(`/api/meetings/${editingMeeting.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: editingMeeting.title,
-          attendees: editingMeeting.attendees,
-          meeting_date: editingMeeting.meeting_date || undefined,
-          agenda: editingMeeting.agenda,
-          notes: editingMeeting.notes,
-          fireflies_link: editingMeeting.fireflies_link,
-          tags: editingMeeting.tags
-        })
+      await MeetingAgendaService.update(editingMeeting.id, {
+        title: editingMeeting.title,
+        attendees: editingMeeting.attendees,
+        meeting_date: editingMeeting.meeting_date || undefined,
+        agenda: editingMeeting.agenda,
+        notes: editingMeeting.notes,
+        fireflies_link: editingMeeting.fireflies_link,
+        tags: editingMeeting.tags
       })
-
-      if (!response.ok) throw new Error('Failed to update meeting')
 
       setEditingMeeting(null)
       fetchMeetings()
@@ -127,11 +113,7 @@ export default function MeetingsPage() {
     if (!confirm('Are you sure you want to delete this meeting?')) return
 
     try {
-      const response = await fetch(`/api/meetings/${meetingId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) throw new Error('Failed to delete meeting')
+      await MeetingAgendaService.delete(meetingId)
       fetchMeetings()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete meeting')
@@ -166,13 +148,7 @@ export default function MeetingsPage() {
 
   const handleCreateQuickTask = async () => {
     try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(quickTask)
-      })
-
-      if (!response.ok) throw new Error('Failed to create task')
+      await PersonalTaskService.create(quickTask)
 
       setQuickTask({
         title: '',

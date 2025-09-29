@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { ShoppingItem, PersonalRecipe } from '@/types/database'
 import { ErrorBoundary, ErrorFallback } from '@/components/ErrorBoundary'
+import { ShoppingListService } from '@/services/ShoppingListService'
+import { RecipeService } from '@/services/RecipeService'
 
 function ShoppingPageContent() {
   const [activeTab, setActiveTab] = useState<'shopping' | 'recipes'>('shopping')
@@ -32,24 +34,14 @@ function ShoppingPageContent() {
       setLoading(true)
       setError(null) // Clear any previous errors
 
-      const [shoppingResponse, recipesResponse] = await Promise.all([
-        fetch('/api/shopping-items'),
-        fetch('/api/recipes')
+      // Get shopping items from the default list
+      const [shoppingItems, recipes] = await Promise.all([
+        ShoppingListService.getItems(),
+        RecipeService.getAll()
       ])
 
-      if (shoppingResponse.ok) {
-        const shoppingData = await shoppingResponse.json()
-        setShoppingItems(shoppingData.items || [])
-      } else {
-        console.error('Shopping items API failed:', shoppingResponse.status, shoppingResponse.statusText)
-      }
-
-      if (recipesResponse.ok) {
-        const recipesData = await recipesResponse.json()
-        setRecipes(recipesData.recipes || [])
-      } else {
-        console.error('Recipes API failed:', recipesResponse.status, recipesResponse.statusText)
-      }
+      setShoppingItems(shoppingItems || [])
+      setRecipes(recipes || [])
     } catch (err) {
       console.error('Fetch error:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
@@ -62,17 +54,15 @@ function ShoppingPageContent() {
     if (!newItem.trim()) return
 
     try {
-      const response = await fetch('/api/shopping-items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newItem.trim(),
-          quantity: 1,
-          is_completed: false
-        })
-      })
+      // Get the default list first
+      const defaultList = await ShoppingListService.getDefaultList()
 
-      if (!response.ok) throw new Error('Failed to add item')
+      await ShoppingListService.addItem({
+        name: newItem.trim(),
+        quantity: 1,
+        is_completed: false,
+        shopping_list_id: defaultList.id
+      })
 
       setNewItem('')
       fetchData()
@@ -83,16 +73,10 @@ function ShoppingPageContent() {
 
   const handleToggleItem = async (item: ShoppingItem) => {
     try {
-      const response = await fetch(`/api/shopping-items/${item.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          is_completed: !item.is_completed,
-          completed_at: !item.is_completed ? new Date().toISOString() : undefined
-        })
+      await ShoppingListService.updateItem(item.id, {
+        is_completed: !item.is_completed,
+        completed_at: !item.is_completed ? new Date().toISOString() : undefined
       })
-
-      if (!response.ok) throw new Error('Failed to update item')
       fetchData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update item')
@@ -101,11 +85,7 @@ function ShoppingPageContent() {
 
   const handleDeleteItem = async (itemId: string) => {
     try {
-      const response = await fetch(`/api/shopping-items/${itemId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) throw new Error('Failed to delete item')
+      await ShoppingListService.deleteItem(itemId)
       fetchData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete item')
@@ -114,20 +94,14 @@ function ShoppingPageContent() {
 
   const handleCreateRecipe = async () => {
     try {
-      const response = await fetch('/api/recipes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newRecipe,
-          servings: newRecipe.servings ? parseInt(newRecipe.servings) : undefined,
-          prep_time: newRecipe.prep_time ? parseInt(newRecipe.prep_time) : undefined,
-          cook_time: newRecipe.cook_time ? parseInt(newRecipe.cook_time) : undefined,
-          difficulty: 'medium',
-          is_favorite: false
-        })
+      await RecipeService.create({
+        ...newRecipe,
+        servings: newRecipe.servings ? parseInt(newRecipe.servings) : undefined,
+        prep_time: newRecipe.prep_time ? parseInt(newRecipe.prep_time) : undefined,
+        cook_time: newRecipe.cook_time ? parseInt(newRecipe.cook_time) : undefined,
+        difficulty: 'medium',
+        is_favorite: false
       })
-
-      if (!response.ok) throw new Error('Failed to create recipe')
 
       setNewRecipe({
         title: '',
@@ -150,11 +124,7 @@ function ShoppingPageContent() {
     if (!confirm('Are you sure you want to delete this recipe?')) return
 
     try {
-      const response = await fetch(`/api/recipes/${recipeId}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) throw new Error('Failed to delete recipe')
+      await RecipeService.delete(recipeId)
       fetchData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete recipe')
