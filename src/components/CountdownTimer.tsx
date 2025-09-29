@@ -135,24 +135,32 @@ export default function CountdownTimer({ className = '' }: CountdownTimerProps) 
 
       <div className="flex gap-2 justify-center">
         {!state.isRunning ? (
-          <button
-            onClick={handleStart}
-            disabled={state.timeLeft === 0}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            Start
-          </button>
+          state.timeLeft === 0 ? (
+            <button
+              onClick={handleReset}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-medium"
+            >
+              Reset Timer
+            </button>
+          ) : (
+            <button
+              onClick={handleStart}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium"
+            >
+              Start
+            </button>
+          )
         ) : (
           <button
             onClick={handlePause}
-            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 font-medium"
           >
             Pause
           </button>
         )}
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
         >
           Reset
         </button>
