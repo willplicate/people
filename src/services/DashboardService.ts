@@ -4,6 +4,7 @@ import { ContactService } from './ContactService'
 import { InteractionService } from './InteractionService'
 import { ReminderService } from './ReminderService'
 import { BirthdayReminderService } from './BirthdayReminderService'
+import { AutomatedReminderService } from './AutomatedReminderService'
 
 export interface DashboardStats {
   contacts: {
@@ -65,6 +66,11 @@ export class DashboardService {
    * Get comprehensive dashboard statistics
    */
   static async getDashboardStats(): Promise<DashboardStats> {
+    // Generate missing reminders (run in background to avoid blocking dashboard load)
+    AutomatedReminderService.generateUpcomingReminders().catch(error => {
+      console.warn('Background reminder generation failed:', error)
+    })
+
     // Fetch all required data in parallel
     const [
       contacts,
