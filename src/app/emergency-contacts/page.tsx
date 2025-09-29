@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Contact, ContactInfo } from '@/types/database'
+import { ContactService } from '@/services/ContactService'
+import { ContactInfoService } from '@/services/ContactInfoService'
 
 interface EmergencyContactWithInfo extends Contact {
   contactInfo?: ContactInfo[]
@@ -21,12 +23,33 @@ export default function EmergencyContactsPage() {
   const fetchEmergencyContacts = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/emergency-contacts')
-      if (!response.ok) {
-        throw new Error('Failed to fetch emergency contacts')
-      }
-      const data = await response.json()
-      setEmergencyContacts(data.contacts || [])
+
+      // Get all contacts
+      const allContacts = await ContactService.getAll()
+
+      // Filter for emergency contacts only
+      const emergencyContacts = allContacts.filter(contact => contact.is_emergency)
+
+      // Get contact info for each emergency contact
+      const contactsWithInfo = await Promise.all(
+        emergencyContacts.map(async (contact) => {
+          try {
+            const contactInfo = await ContactInfoService.getByContactId(contact.id)
+            return {
+              ...contact,
+              contactInfo
+            }
+          } catch (error) {
+            console.warn(`Failed to get contact info for ${contact.first_name}:`, error)
+            return {
+              ...contact,
+              contactInfo: []
+            }
+          }
+        })
+      )
+
+      setEmergencyContacts(contactsWithInfo)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch emergency contacts')
     } finally {
