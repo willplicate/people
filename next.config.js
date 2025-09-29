@@ -3,6 +3,10 @@ const nextConfig = {
   // Enable static export for reliable deployment
   output: 'export',
 
+  // Set base path for GitHub Pages deployment
+  basePath: '/people',
+  assetPrefix: '/people',
+
   // Disable image optimization for static export
   images: {
     unoptimized: true
