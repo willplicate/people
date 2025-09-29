@@ -173,4 +173,8 @@ export class UrgentTaskService {
       original_task_id: taskId
     });
   }
+
+  static async markCompleted(id: string): Promise<UrgentTask> {
+    return this.updateUrgentTask(id, { is_completed: true });
+  }
 }

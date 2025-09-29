@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UrgentTask } from '@/services/UrgentTaskService';
+import { UrgentTaskService, UrgentTask } from '@/services/UrgentTaskService';
 
 interface UrgentTaskListProps {
   className?: string;
@@ -16,11 +16,8 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('/api/urgent-tasks');
-      if (response.ok) {
-        const data = await response.json();
-        setTasks(data);
-      }
+      const data = await UrgentTaskService.getUrgentTasks();
+      setTasks(data);
     } catch (error) {
       console.error('Error fetching urgent tasks:', error);
     } finally {
@@ -37,21 +34,13 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
     if (!newTaskTitle.trim()) return;
 
     try {
-      const response = await fetch('/api/urgent-tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newTaskTitle,
-          description: newTaskDescription || undefined,
-        }),
+      const newTask = await UrgentTaskService.createUrgentTask({
+        title: newTaskTitle,
+        description: newTaskDescription || undefined,
       });
-
-      if (response.ok) {
-        const newTask = await response.json();
-        setTasks([...tasks, newTask]);
-        setNewTaskTitle('');
-        setNewTaskDescription('');
-      }
+      setTasks([...tasks, newTask]);
+      setNewTaskTitle('');
+      setNewTaskDescription('');
     } catch (error) {
       console.error('Error creating urgent task:', error);
     }
@@ -59,18 +48,10 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
 
   const handleToggleComplete = async (taskId: string, isCompleted: boolean) => {
     try {
-      const response = await fetch(`/api/urgent-tasks/${taskId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_completed: !isCompleted }),
-      });
-
-      if (response.ok) {
-        const updatedTask = await response.json();
-        setTasks(tasks.map(task =>
-          task.id === taskId ? updatedTask : task
-        ));
-      }
+      const updatedTask = await UrgentTaskService.updateUrgentTask(taskId, { is_completed: !isCompleted });
+      setTasks(tasks.map(task =>
+        task.id === taskId ? updatedTask : task
+      ));
     } catch (error) {
       console.error('Error updating task:', error);
     }
@@ -78,13 +59,8 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      const response = await fetch(`/api/urgent-tasks/${taskId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setTasks(tasks.filter(task => task.id !== taskId));
-      }
+      await UrgentTaskService.deleteUrgentTask(taskId);
+      setTasks(tasks.filter(task => task.id !== taskId));
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -132,11 +108,7 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
 
     // Send reorder request to backend
     try {
-      await fetch('/api/urgent-tasks/reorder', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskUpdates }),
-      });
+      await UrgentTaskService.reorderUrgentTasks(taskUpdates);
     } catch (error) {
       console.error('Error reordering tasks:', error);
       // Revert on error
