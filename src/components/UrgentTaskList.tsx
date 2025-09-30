@@ -13,6 +13,7 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [loading, setLoading] = useState(true);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   const fetchTasks = async () => {
     try {
@@ -169,34 +170,62 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
           {pendingTasks.map((task) => (
             <div
               key={task.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, task.id)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, task.id)}
-              className={`p-3 border border-gray-200 rounded-md cursor-move hover:bg-gray-50 ${
+              className={`border border-gray-200 rounded-md ${
                 draggedTaskId === task.id ? 'opacity-50' : ''
               }`}
             >
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={task.is_completed}
-                  onChange={() => handleToggleComplete(task.id, task.is_completed)}
-                  className="mt-1"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-gray-900">{task.title}</div>
-                  {task.description && (
-                    <div className="text-xs text-gray-600 mt-1">{task.description}</div>
+              <div
+                draggable
+                onDragStart={(e) => handleDragStart(e, task.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, task.id)}
+                className="p-3 cursor-move hover:bg-gray-50"
+                onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={task.is_completed}
+                    onChange={(e) => {
+                      e.stopPropagation()
+                      handleToggleComplete(task.id, task.is_completed)
+                    }}
+                    className="mt-1"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium text-sm text-gray-900">{task.title}</div>
+                      {task.description && (
+                        <span className="text-xs text-gray-400">
+                          {expandedTaskId === task.id ? '▼' : '▶'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteTask(task.id)
+                    }}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Expanded details */}
+              {expandedTaskId === task.id && task.description && (
+                <div className="px-3 pb-3 pt-0 border-t border-gray-100 bg-gray-50">
+                  <div className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{task.description}</div>
+                  {task.created_at && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      Created: {new Date(task.created_at).toLocaleString()}
+                    </div>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDeleteTask(task.id)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
-                  ✕
-                </button>
-              </div>
+              )}
             </div>
           ))}
           {pendingTasks.length === 0 && (
@@ -215,28 +244,56 @@ export default function UrgentTaskList({ className = '' }: UrgentTaskListProps) 
             {completedTasks.map((task) => (
               <div
                 key={task.id}
-                className="p-3 border border-gray-200 rounded-md bg-gray-50"
+                className="border border-gray-200 rounded-md bg-gray-50"
               >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={task.is_completed}
-                    onChange={() => handleToggleComplete(task.id, task.is_completed)}
-                    className="mt-1"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-gray-500 line-through">{task.title}</div>
-                    {task.description && (
-                      <div className="text-xs text-gray-400 mt-1 line-through">{task.description}</div>
+                <div
+                  className="p-3 cursor-pointer hover:bg-gray-100"
+                  onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={task.is_completed}
+                      onChange={(e) => {
+                        e.stopPropagation()
+                        handleToggleComplete(task.id, task.is_completed)
+                      }}
+                      className="mt-1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-sm text-gray-500 line-through">{task.title}</div>
+                        {task.description && (
+                          <span className="text-xs text-gray-400">
+                            {expandedTaskId === task.id ? '▼' : '▶'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteTask(task.id)
+                      }}
+                      className="text-red-500 hover:text-red-700 text-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded details */}
+                {expandedTaskId === task.id && task.description && (
+                  <div className="px-3 pb-3 pt-0 border-t border-gray-100 bg-gray-100">
+                    <div className="text-sm text-gray-600 mt-2 line-through whitespace-pre-wrap">{task.description}</div>
+                    {task.completed_at && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        Completed: {new Date(task.completed_at).toLocaleString()}
+                      </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleDeleteTask(task.id)}
-                    className="text-red-500 hover:text-red-700 text-sm"
-                  >
-                    ✕
-                  </button>
-                </div>
+                )}
               </div>
             ))}
           </div>
