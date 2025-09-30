@@ -195,16 +195,12 @@ export default function TasksPage() {
 
   const handleMoveToUrgent = async (task: PersonalTask) => {
     try {
-      // Create urgent task
-      await UrgentTaskService.create({
-        title: task.title,
-        description: task.description || '',
-        priority: 'urgent',
-        target_completion: new Date().toISOString() // Due today
-      })
-
-      // Optionally delete the original task or mark as moved
-      await PersonalTaskService.delete(task.id)
+      // Move task to urgent list
+      await UrgentTaskService.moveTaskToUrgent(
+        task.id,
+        task.title,
+        task.description || undefined
+      )
 
       // Show success message
       alert('Task moved to urgent list!')
@@ -215,7 +211,9 @@ export default function TasksPage() {
       // Optional: Navigate to urgent tasks page
       // router.push('/urgent-tasks')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to move task to urgent')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to move task to urgent'
+      alert(errorMessage)
+      setError(errorMessage)
     }
   }
 
