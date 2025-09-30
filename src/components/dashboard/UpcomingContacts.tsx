@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { DashboardService } from '@/services/DashboardService'
+import { ContactService } from '@/services/ContactService'
 import { Contact, Reminder } from '@/types/database'
 
 interface ContactWithReminder {
@@ -59,6 +60,19 @@ export default function UpcomingContacts() {
     loadContacts()
   }, [])
 
+  const handleMarkContacted = async (contactId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      // Update last contacted date to now
+      await ContactService.updateLastContactedAt(contactId)
+      // Remove from the list immediately
+      setContacts(prev => prev.filter(item => item.contact.id !== contactId))
+    } catch (error) {
+      console.error('Failed to mark contact as contacted:', error)
+      alert('Failed to update contact. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-card">
@@ -85,14 +99,20 @@ export default function UpcomingContacts() {
           </div>
         ) : (
           contacts.map((item) => (
-            <div key={item.contact.id} className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+            <div key={item.contact.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center space-x-3 flex-1">
+                <input
+                  type="checkbox"
+                  onChange={(e) => handleMarkContacted(item.contact.id, e as any)}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  title="Mark as contacted"
+                />
                 <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-primary-foreground">
                     {item.contact.first_name?.[0]}{item.contact.last_name?.[0]}
                   </span>
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="font-medium text-foreground">
                     {item.contact.first_name} {item.contact.last_name}
                   </h3>
@@ -104,8 +124,8 @@ export default function UpcomingContacts() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${
+              <div className="flex items-center space-x-3">
+                <span className={`text-sm font-medium whitespace-nowrap ${
                   item.daysOverdue > 0
                     ? 'text-destructive'
                     : item.daysOverdue === 0
@@ -119,7 +139,11 @@ export default function UpcomingContacts() {
                       : `Due in ${Math.abs(item.daysOverdue)} days`
                   }
                 </span>
-                <button className="text-gray-400 hover:text-gray-600">
+                <button
+                  onClick={(e) => handleMarkContacted(item.contact.id, e)}
+                  className="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50"
+                  title="Mark as contacted"
+                >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
                   </svg>
