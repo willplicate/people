@@ -30,6 +30,7 @@ export class UrgentTaskService {
     const { data, error } = await supabase
       .from('urgent_tasks')
       .select('*')
+      .eq('is_completed', false)
       .order('order_index', { ascending: true })
       .order('created_at', { ascending: true });
 

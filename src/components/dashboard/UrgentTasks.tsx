@@ -14,7 +14,7 @@ export default function UrgentTasks() {
     async function loadTasks() {
       try {
         const tasks = await UrgentTaskService.getUrgentTasks()
-        setUrgentTasks(tasks) // Show all tasks including completed
+        setUrgentTasks(tasks)
       } catch (error) {
         console.error('Failed to load urgent tasks:', error)
       } finally {
@@ -29,10 +29,8 @@ export default function UrgentTasks() {
     e.stopPropagation()
     try {
       await UrgentTaskService.updateUrgentTask(taskId, { is_completed: !isCompleted })
-      // Update the task in local state
-      setUrgentTasks(prev => prev.map(task =>
-        task.id === taskId ? { ...task, is_completed: !isCompleted } : task
-      ))
+      // Remove completed tasks from the list
+      setUrgentTasks(prev => prev.filter(task => task.id !== taskId))
     } catch (error) {
       console.error('Failed to complete task:', error)
     }
