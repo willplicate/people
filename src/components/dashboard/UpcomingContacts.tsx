@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { DashboardService } from '@/services/DashboardService'
 import { ContactService } from '@/services/ContactService'
 import { ReminderService } from '@/services/ReminderService'
+import { AutomatedReminderService } from '@/services/AutomatedReminderService'
 import { Contact, Reminder } from '@/types/database'
 
 interface ContactWithReminder {
@@ -64,9 +65,10 @@ export default function UpcomingContacts() {
   const handleMarkContacted = async (contactId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
-      // Find the reminder ID for this contact
+      // Find the reminder ID and contact for this contact
       const contactItem = contacts.find(item => item.contact.id === contactId)
       const reminderId = contactItem?.reminder.id
+      const contact = contactItem?.contact
 
       // Update last contacted date to now
       await ContactService.updateLastContactedAt(contactId)
@@ -74,6 +76,14 @@ export default function UpcomingContacts() {
       // Dismiss the associated reminder so it doesn't reappear
       if (reminderId) {
         await ReminderService.dismiss(reminderId)
+      }
+
+      // Generate a new reminder for the next contact date
+      if (contact) {
+        const updatedContact = await ContactService.getById(contactId)
+        if (updatedContact) {
+          await AutomatedReminderService.generateReminderForContact(updatedContact)
+        }
       }
 
       // Remove from the list immediately

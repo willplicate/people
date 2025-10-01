@@ -46,9 +46,11 @@ export class AutomatedReminderService {
       contact.last_contacted_at
     )
 
-    // Check if we already have a pending OR recently dismissed reminder for this contact around this date
+    // Check if we already have a pending reminder for this contact around this date
+    // Note: We only check 'pending' reminders, not 'dismissed' ones, so new reminders
+    // can be created after a contact is marked as contacted
     const existingReminders = await ReminderService.getByContactId(contact.id, {
-      status: ['pending', 'dismissed'] // Check both pending and dismissed
+      status: 'pending'
     })
 
     const hasRecentReminder = existingReminders.some(reminder => {
@@ -56,12 +58,12 @@ export class AutomatedReminderService {
       const daysDiff = Math.abs(
         (reminderDate.getTime() - nextReminderDate.getTime()) / (1000 * 60 * 60 * 24)
       )
-      // Don't create new reminders if there's one within 2 days (pending or recently dismissed)
+      // Don't create new reminders if there's already a pending one within 2 days
       return daysDiff <= 2
     })
 
     if (hasRecentReminder) {
-      return false // Reminder already exists or was recently dismissed
+      return false // Reminder already exists
     }
 
     // Create reminders that are due within the next 7 days OR are already overdue
