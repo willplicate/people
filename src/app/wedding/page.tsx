@@ -41,6 +41,12 @@ export default function WeddingPage() {
     notes: ''
   })
 
+  // Load initial stats for both tabs
+  useEffect(() => {
+    loadBothStats()
+  }, [])
+
+  // Load data when tab changes or filters change
   useEffect(() => {
     if (activeTab === 'rsvps') {
       loadGuestData()
@@ -48,6 +54,19 @@ export default function WeddingPage() {
       loadInviteData()
     }
   }, [activeTab, guestFilter, inviteFilter, searchQuery])
+
+  const loadBothStats = async () => {
+    try {
+      const [guestStatsData, inviteStatsData] = await Promise.all([
+        WeddingGuestService.getStats(),
+        WeddingInviteService.getStats()
+      ])
+      setGuestStats(guestStatsData)
+      setInviteStats(inviteStatsData)
+    } catch (error) {
+      console.error('Failed to load stats:', error)
+    }
+  }
 
   const loadGuestData = async () => {
     try {
