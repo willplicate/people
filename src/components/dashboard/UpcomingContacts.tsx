@@ -65,17 +65,17 @@ export default function UpcomingContacts() {
   const handleMarkContacted = async (contactId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
-      // Find the reminder ID and contact for this contact
+      // Find the contact
       const contactItem = contacts.find(item => item.contact.id === contactId)
-      const reminderId = contactItem?.reminder.id
       const contact = contactItem?.contact
 
-      // Dismiss the old reminder first
-      if (reminderId) {
-        await ReminderService.dismiss(reminderId)
+      // Dismiss ALL pending reminders for this contact (not just the current one)
+      const allReminders = await ReminderService.getByContactId(contactId, { status: 'pending' })
+      for (const reminder of allReminders) {
+        await ReminderService.dismiss(reminder.id)
       }
 
-      // Update last contacted date to now (after dismissing, so it doesn't get overwritten)
+      // Update last contacted date to now
       await ContactService.updateLastContactedAt(contactId)
 
       // Generate a new reminder for the next contact date based on updated last_contacted_at
