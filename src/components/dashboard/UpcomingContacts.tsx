@@ -70,15 +70,15 @@ export default function UpcomingContacts() {
       const reminderId = contactItem?.reminder.id
       const contact = contactItem?.contact
 
-      // Update last contacted date to now
-      await ContactService.updateLastContactedAt(contactId)
-
-      // Dismiss the associated reminder so it doesn't reappear
+      // Dismiss the old reminder first
       if (reminderId) {
         await ReminderService.dismiss(reminderId)
       }
 
-      // Generate a new reminder for the next contact date
+      // Update last contacted date to now (after dismissing, so it doesn't get overwritten)
+      await ContactService.updateLastContactedAt(contactId)
+
+      // Generate a new reminder for the next contact date based on updated last_contacted_at
       if (contact) {
         const updatedContact = await ContactService.getById(contactId)
         if (updatedContact) {

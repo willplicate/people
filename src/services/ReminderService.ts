@@ -235,15 +235,10 @@ export class ReminderService {
 
   /**
    * Dismiss a reminder by setting status to 'dismissed'
-   * Also gives the contact a 3-day grace period to avoid immediate overdue status
+   * Note: This does NOT update the contact's last_contacted_at - that should be done
+   * separately by the caller if the contact was actually contacted
    */
   static async dismiss(id: string): Promise<Reminder> {
-    // First get the reminder to find the contact
-    const reminder = await this.getById(id)
-    if (!reminder) {
-      throw new Error('Reminder not found')
-    }
-
     // Update the reminder status
     const { data, error } = await supabase
       .from(TABLES.REMINDERS)
@@ -257,23 +252,6 @@ export class ReminderService {
 
     if (error) {
       throw new Error(`Failed to dismiss reminder: ${error.message}`)
-    }
-
-    // Give the contact a 3-day grace period by updating their last_contacted_at
-    // This prevents them from immediately appearing as overdue
-    const gracePeriodDate = new Date()
-    gracePeriodDate.setDate(gracePeriodDate.getDate() - 4) // 4 days ago gives 3 days buffer
-
-    try {
-      await supabase
-        .from('personal_contacts')
-        .update({
-          last_contacted_at: gracePeriodDate.toISOString()
-        })
-        .eq('id', reminder.contact_id)
-    } catch (contactError) {
-      // If updating contact fails, still return the dismissed reminder
-      console.warn('Failed to update contact grace period:', contactError)
     }
 
     return data
