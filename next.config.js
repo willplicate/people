@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static export for reliable deployment
+  // Enable static export for GitHub Pages
   output: 'export',
 
-  // Set base path for GitHub Pages deployment
+  // Enable base path for GitHub Pages
   basePath: '/people',
   assetPrefix: '/people',
 
