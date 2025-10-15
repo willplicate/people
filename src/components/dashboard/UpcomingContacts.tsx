@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { DashboardService } from '@/services/DashboardService'
 import { ContactService } from '@/services/ContactService'
 import { ReminderService } from '@/services/ReminderService'
@@ -128,22 +129,27 @@ export default function UpcomingContacts() {
                   className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                   title="Mark as contacted"
                 />
-                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary-foreground">
-                    {item.contact.first_name?.[0]}{item.contact.last_name?.[0]}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-foreground">
-                    {item.contact.first_name} {item.contact.last_name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {item.contact.last_contacted_at
-                      ? `Last contacted ${Math.floor((Date.now() - new Date(item.contact.last_contacted_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`
-                      : 'Never contacted'
-                    }
-                  </p>
-                </div>
+                <Link
+                  href={`/contacts/${item.contact.id}`}
+                  className="flex items-center space-x-3 flex-1 group"
+                >
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center group-hover:bg-primary/80 transition-colors">
+                    <span className="text-sm font-medium text-primary-foreground">
+                      {item.contact.first_name?.[0]}{item.contact.last_name?.[0]}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                      {item.contact.first_name} {item.contact.last_name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {item.contact.last_contacted_at
+                        ? `Last contacted ${Math.floor((Date.now() - new Date(item.contact.last_contacted_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`
+                        : 'Never contacted'
+                      }
+                    </p>
+                  </div>
+                </Link>
               </div>
               <div className="flex items-center space-x-3">
                 <span className={`text-sm font-medium whitespace-nowrap ${
