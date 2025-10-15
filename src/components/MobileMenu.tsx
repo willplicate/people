@@ -32,7 +32,6 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/contacts', label: 'Contacts' },
-    { href: '/learning', label: 'Learning' },
     { href: '/wedding', label: 'Wedding' },
     { href: '/meetings', label: 'Meetings' },
     { href: '/tasks', label: 'Tasks' },
