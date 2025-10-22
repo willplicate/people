@@ -1,3 +1,4 @@
+import WelcomeSection from '@/components/dashboard/WelcomeSection'
 import UrgentTasks from '@/components/dashboard/UrgentTasks'
 import UpcomingContacts from '@/components/dashboard/UpcomingContacts'
 import UpcomingBirthdays from '@/components/dashboard/UpcomingBirthdays'
@@ -8,6 +9,7 @@ import ShoppingList from '@/components/dashboard/ShoppingList'
 export default function Home() {
   return (
     <div className="space-y-gutter">
+      <WelcomeSection />
       <UrgentTasks />
       <UpcomingContacts />
       <UpcomingBirthdays />

@@ -196,3 +196,19 @@ export type MeetingAgenda = {
 export type CreateMeetingAgendaInput = Omit<MeetingAgenda, 'id' | 'created_at' | 'updated_at'>
 export type UpdateMeetingAgendaInput = Partial<CreateMeetingAgendaInput>
 
+// Daily Quotes Types
+export type DailyQuote = {
+  id: string
+  quote_text: string
+  author?: string
+  image_url?: string
+  date_assigned?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Input types for daily quotes
+export type CreateDailyQuoteInput = Omit<DailyQuote, 'id' | 'created_at' | 'updated_at'>
+export type UpdateDailyQuoteInput = Partial<CreateDailyQuoteInput>
+

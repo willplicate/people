@@ -27,5 +27,6 @@ export const TABLES = {
   RECIPES: 'personal_recipes',
   HABITS: 'personal_habits',
   HABIT_COMPLETIONS: 'personal_habit_completions',
-  MEETING_AGENDAS: 'meeting_agendas'
+  MEETING_AGENDAS: 'meeting_agendas',
+  DAILY_QUOTES: 'personal_daily_quotes'
 } as const
