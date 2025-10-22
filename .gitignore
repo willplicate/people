@@ -13,6 +13,10 @@ build/
 .env*.local
 .env.production
 
+# Google Photos API credentials
+scripts/google-photos-credentials.json
+scripts/google-photos-token.json
+
 # Testing
 coverage/
 cypress/videos/
