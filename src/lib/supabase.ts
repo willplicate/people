@@ -28,5 +28,8 @@ export const TABLES = {
   HABITS: 'personal_habits',
   HABIT_COMPLETIONS: 'personal_habit_completions',
   MEETING_AGENDAS: 'meeting_agendas',
-  DAILY_QUOTES: 'personal_daily_quotes'
+  DAILY_QUOTES: 'personal_daily_quotes',
+  EXPENSE_CATEGORIES: 'expense_categories',
+  BUDGET_MONTHS: 'budget_months',
+  EXPENSES: 'expenses'
 } as const

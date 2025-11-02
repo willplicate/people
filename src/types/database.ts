@@ -212,3 +212,96 @@ export type DailyQuote = {
 export type CreateDailyQuoteInput = Omit<DailyQuote, 'id' | 'created_at' | 'updated_at'>
 export type UpdateDailyQuoteInput = Partial<CreateDailyQuoteInput>
 
+// Budget Tracking Types
+export type ExpenseCategory = {
+  id: string
+  name: string
+  color: string // Hex color for charts (e.g., '#10b981')
+  icon?: string // Optional emoji or icon name
+  is_excludable: boolean // Can be toggled off in charts
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type BudgetMonth = {
+  id: string
+  year: number
+  month: number // 1-12
+  is_finalized: boolean
+  finalized_at?: string
+  finalized_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export type SplitType = 'individual' | 'shared_50_50' | 'custom'
+
+export type Expense = {
+  id: string
+  month_id: string
+  category_id: string
+  amount: number // decimal(10,2)
+  description?: string
+  expense_date: string // Date
+  paid_by_user_id: string
+  split_type: SplitType
+  split_percentage?: number // For custom splits (0-100)
+  split_with_user_id?: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+// Extended types with joined data
+export type ExpenseWithDetails = Expense & {
+  category: ExpenseCategory
+  paid_by_email?: string
+  split_with_email?: string
+}
+
+export type CategoryTotal = {
+  category_id: string
+  category_name: string
+  category_color: string
+  category_icon?: string
+  total_amount: number
+  expense_count: number
+  paid_by_current_user: number
+  paid_by_partner: number
+  shared_amount: number
+}
+
+export type MonthlyBalance = {
+  month_id: string
+  year: number
+  month: number
+  current_user_paid: number // Total paid by current user
+  partner_paid: number // Total paid by partner
+  current_user_owes: number // Amount current user owes for shared expenses
+  partner_owes: number // Amount partner owes for shared expenses
+  net_balance: number // Positive = partner owes current user, Negative = current user owes partner
+  net_balance_description: string // Human-readable description
+}
+
+// Input types for budget tracking
+export type CreateExpenseCategoryInput = Omit<ExpenseCategory, 'id' | 'created_at' | 'updated_at'>
+export type UpdateExpenseCategoryInput = Partial<CreateExpenseCategoryInput>
+
+export type CreateBudgetMonthInput = Omit<BudgetMonth, 'id' | 'created_at' | 'updated_at'>
+export type UpdateBudgetMonthInput = Partial<CreateBudgetMonthInput>
+
+export type CreateExpenseInput = Omit<Expense, 'id' | 'created_at' | 'updated_at' | 'created_by'>
+export type UpdateExpenseInput = Partial<CreateExpenseInput>
+
+// Filter types for expense queries
+export type ExpenseFilters = {
+  month_id?: string
+  category_id?: string
+  paid_by_user_id?: string
+  split_type?: SplitType
+  date_from?: string
+  date_to?: string
+  search?: string
+}
+
