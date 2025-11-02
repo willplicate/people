@@ -9,6 +9,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/contacts', label: 'Contacts' },
+    { href: '/budget', label: 'Budget' },
     { href: '/wedding', label: 'Wedding' },
     { href: '/meetings', label: 'Meetings' },
     { href: '/tasks', label: 'Tasks' },
