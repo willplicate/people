@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import {
   Expense,
   ExpenseCategory,
@@ -18,14 +19,14 @@ import CategoryTotals from '@/components/budget/CategoryTotals'
 import BalanceSummary from '@/components/budget/BalanceSummary'
 import MonthSelector from '@/components/budget/MonthSelector'
 
-// TODO: Replace with actual user IDs from auth
-const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000000' // Placeholder
-const PARTNER_USER_ID = '11111111-1111-1111-1111-111111111111' // Placeholder
-
 export default function BudgetPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // User IDs - get from Supabase auth
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [partnerUserId, setPartnerUserId] = useState<string | null>(null)
 
   // Data state
   const [months, setMonths] = useState<BudgetMonth[]>([])
@@ -40,14 +41,26 @@ export default function BudgetPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
   useEffect(() => {
+    // Get current user from Supabase auth
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setCurrentUserId(user.id)
+        // TODO: Get partner ID from user metadata or settings
+        // For now, leaving as null - you'll need to configure this
+        // Option 1: Store in user metadata: user.user_metadata.partner_id
+        // Option 2: Create a user_settings table with partner_id field
+      }
+    }
+    getCurrentUser()
     initialize()
   }, [])
 
   useEffect(() => {
-    if (selectedMonth) {
+    if (selectedMonth && currentUserId) {
       loadMonthData()
     }
-  }, [selectedMonth])
+  }, [selectedMonth, currentUserId])
 
   const initialize = async () => {
     setLoading(true)
@@ -81,7 +94,7 @@ export default function BudgetPage() {
   }
 
   const loadMonthData = async () => {
-    if (!selectedMonth) return
+    if (!selectedMonth || !currentUserId) return
 
     try {
       // Load expenses for the selected month
@@ -94,13 +107,17 @@ export default function BudgetPage() {
       const totals = await ExpenseService.getCategoryTotals(selectedMonth.id)
       setCategoryTotals(totals)
 
-      // Calculate balance
-      const balanceData = await ExpenseService.calculateMonthlyBalance(
-        selectedMonth.id,
-        CURRENT_USER_ID,
-        PARTNER_USER_ID
-      )
-      setBalance(balanceData)
+      // Calculate balance (only if partner is configured)
+      if (partnerUserId) {
+        const balanceData = await ExpenseService.calculateMonthlyBalance(
+          selectedMonth.id,
+          currentUserId,
+          partnerUserId
+        )
+        setBalance(balanceData)
+      } else {
+        setBalance(null)
+      }
     } catch (err) {
       console.error('Error loading month data:', err)
       setError(err instanceof Error ? err.message : 'Failed to load month data')
@@ -138,8 +155,13 @@ export default function BudgetPage() {
   }
 
   const handleFinalizeMonth = async (monthId: string) => {
+    if (!currentUserId) {
+      alert('User not authenticated')
+      return
+    }
+
     try {
-      const finalizedMonth = await ExpenseService.finalizeMonth(monthId, CURRENT_USER_ID)
+      const finalizedMonth = await ExpenseService.finalizeMonth(monthId, currentUserId)
       setSelectedMonth(finalizedMonth)
 
       // Update months list
@@ -261,14 +283,14 @@ export default function BudgetPage() {
           {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
             {/* Expense Form Modal */}
-            {showExpenseForm && selectedMonth && (
+            {showExpenseForm && selectedMonth && currentUserId && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                 <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                   <ExpenseForm
                     expense={editingExpense || undefined}
                     monthId={selectedMonth.id}
-                    currentUserId={CURRENT_USER_ID}
-                    partnerUserId={PARTNER_USER_ID}
+                    currentUserId={currentUserId}
+                    partnerUserId={partnerUserId || undefined}
                     onSave={handleSaveExpense}
                     onCancel={() => {
                       setShowExpenseForm(false)
@@ -289,13 +311,15 @@ export default function BudgetPage() {
             </div>
 
             {/* Expense List */}
-            <ExpenseList
-              expenses={expenses}
-              currentUserId={CURRENT_USER_ID}
-              onEdit={handleEditExpense}
-              onDelete={handleDeleteExpense}
-              isFinalized={selectedMonth?.is_finalized}
-            />
+            {currentUserId && (
+              <ExpenseList
+                expenses={expenses}
+                currentUserId={currentUserId}
+                onEdit={handleEditExpense}
+                onDelete={handleDeleteExpense}
+                isFinalized={selectedMonth?.is_finalized}
+              />
+            )}
           </div>
         </div>
       </div>
