@@ -50,6 +50,10 @@ export default function BudgetPage() {
         // For now, leaving as null - you'll need to configure this
         // Option 1: Store in user metadata: user.user_metadata.partner_id
         // Option 2: Create a user_settings table with partner_id field
+      } else {
+        // No authentication - use a dummy user ID for personal use
+        // This works because RLS is disabled for budget tables
+        setCurrentUserId('personal-user')
       }
     }
     getCurrentUser()
@@ -212,10 +216,10 @@ export default function BudgetPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="bg-gray-50">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center justify-between">
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Budget Tracker</h1>
             {selectedMonth && (
@@ -236,7 +240,7 @@ export default function BudgetPage() {
           <button
             onClick={handleNewExpense}
             disabled={selectedMonth?.is_finalized}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -247,7 +251,7 @@ export default function BudgetPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto">
+      <div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - Month Selector */}
           <div className="lg:col-span-1">
