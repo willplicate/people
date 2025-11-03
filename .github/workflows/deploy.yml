@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "main", "023-budget-tracking" ]
+    branches: [ "main", "022-dashboard-welcome" ]
   workflow_dispatch:
 
 permissions:
