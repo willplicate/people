@@ -100,7 +100,7 @@ export default function ExpenseList({
 
         {/* Total */}
         <div className="mt-3 text-sm text-gray-600">
-          Total: <span className="font-semibold text-gray-900">${totalAmount.toFixed(2)}</span>
+          Total: <span className="font-semibold text-gray-900">€{totalAmount.toFixed(2)}</span>
         </div>
       </div>
 
@@ -151,13 +151,13 @@ export default function ExpenseList({
                 <div className="flex items-start gap-3">
                   <div className="text-right">
                     <div className="text-lg font-semibold text-gray-900">
-                      ${expense.amount.toFixed(2)}
+                      €{expense.amount.toFixed(2)}
                     </div>
                     {expense.split_type !== 'individual' && (
                       <div className="text-xs text-gray-500">
-                        {expense.split_type === 'shared_50_50' && `$${(expense.amount / 2).toFixed(2)} each`}
+                        {expense.split_type === 'shared_50_50' && `$€{(expense.amount / 2).toFixed(2)} each`}
                         {expense.split_type === 'custom' && expense.split_percentage && (
-                          `You: $${((expense.amount * expense.split_percentage) / 100).toFixed(2)}`
+                          `You: $€{((expense.amount * expense.split_percentage) / 100).toFixed(2)}`
                         )}
                       </div>
                     )}

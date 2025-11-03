@@ -53,7 +53,7 @@ export default function CategoryTotals({ totals, totalSpending }: CategoryTotals
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold">
-                      ${total.total_amount.toFixed(2)}
+                      €{total.total_amount.toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -75,7 +75,7 @@ export default function CategoryTotals({ totals, totalSpending }: CategoryTotals
                       {total.expense_count}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-600">
-                      ${avgPerExpense.toFixed(2)}
+                      €{avgPerExpense.toFixed(2)}
                     </td>
                   </tr>
                 )
@@ -87,7 +87,7 @@ export default function CategoryTotals({ totals, totalSpending }: CategoryTotals
               <tr className="bg-gray-50 font-semibold">
                 <td className="px-4 py-3">Total</td>
                 <td className="px-4 py-3 text-right">
-                  ${totalSpending.toFixed(2)}
+                  €{totalSpending.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-right">100%</td>
                 <td className="px-4 py-3 text-right">

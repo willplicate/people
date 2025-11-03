@@ -18,15 +18,15 @@ export default function BalanceSummary({ balance }: BalanceSummaryProps) {
       {/* Payment Summary */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-sm text-blue-700 font-medium mb-1">You Paid</div>
+          <div className="text-sm text-blue-700 font-medium mb-1">Will Paid</div>
           <div className="text-2xl font-bold text-blue-900">
-            ${balance.current_user_paid.toFixed(2)}
+            €{balance.current_user_paid.toFixed(2)}
           </div>
         </div>
         <div className="bg-purple-50 rounded-lg p-4">
-          <div className="text-sm text-purple-700 font-medium mb-1">Partner Paid</div>
+          <div className="text-sm text-purple-700 font-medium mb-1">Jucas Paid</div>
           <div className="text-2xl font-bold text-purple-900">
-            ${balance.partner_paid.toFixed(2)}
+            €{balance.partner_paid.toFixed(2)}
           </div>
         </div>
       </div>
@@ -34,15 +34,15 @@ export default function BalanceSummary({ balance }: BalanceSummaryProps) {
       {/* Shared Expenses Breakdown */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 mb-1">You Owe for Shared</div>
+          <div className="text-sm text-gray-600 mb-1">Will Owes for Shared</div>
           <div className="text-xl font-semibold text-gray-900">
-            ${balance.current_user_owes.toFixed(2)}
+            €{balance.current_user_owes.toFixed(2)}
           </div>
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
-          <div className="text-sm text-gray-600 mb-1">Partner Owes for Shared</div>
+          <div className="text-sm text-gray-600 mb-1">Jucas Owes for Shared</div>
           <div className="text-xl font-semibold text-gray-900">
-            ${balance.partner_owes.toFixed(2)}
+            €{balance.partner_owes.toFixed(2)}
           </div>
         </div>
       </div>
@@ -62,8 +62,8 @@ export default function BalanceSummary({ balance }: BalanceSummaryProps) {
           'text-blue-700'
         }`}>
           {isEven && '✓ Even'}
-          {youOwe && `You Owe $${Math.abs(balance.net_balance).toFixed(2)}`}
-          {partnerOwes && `Partner Owes $${balance.net_balance.toFixed(2)}`}
+          {youOwe && `Will Owes €${Math.abs(balance.net_balance).toFixed(2)}`}
+          {partnerOwes && `Jucas Owes €${balance.net_balance.toFixed(2)}`}
         </div>
         <div className="text-sm text-gray-600">
           {balance.net_balance_description}

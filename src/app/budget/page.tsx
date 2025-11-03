@@ -51,9 +51,12 @@ export default function BudgetPage() {
         // Option 1: Store in user metadata: user.user_metadata.partner_id
         // Option 2: Create a user_settings table with partner_id field
       } else {
-        // No authentication - use a dummy user ID for personal use
+        // No authentication - use fixed UUIDs for personal use
         // This works because RLS is disabled for budget tables
-        setCurrentUserId('personal-user')
+        // User 1 (You): 00000000-0000-0000-0000-000000000001
+        // User 2 (Partner): 00000000-0000-0000-0000-000000000002
+        setCurrentUserId('00000000-0000-0000-0000-000000000001')
+        setPartnerUserId('00000000-0000-0000-0000-000000000002')
       }
     }
     getCurrentUser()
@@ -216,38 +219,33 @@ export default function BudgetPage() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-gray-50 relative">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Budget Tracker</h1>
-            {selectedMonth && (
-              <p className="text-gray-600 mt-1">
-                {new Date(selectedMonth.year, selectedMonth.month - 1).toLocaleDateString('en-US', {
-                  month: 'long',
-                  year: 'numeric'
-                })}
-                {selectedMonth.is_finalized && (
-                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                    Finalized
-                  </span>
-                )}
-              </p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Budget Tracker</h1>
+        {selectedMonth && (
+          <p className="text-gray-600 mb-4">
+            {new Date(selectedMonth.year, selectedMonth.month - 1).toLocaleDateString('en-US', {
+              month: 'long',
+              year: 'numeric'
+            })}
+            {selectedMonth.is_finalized && (
+              <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                Finalized
+              </span>
             )}
-          </div>
+          </p>
+        )}
 
-          <button
-            onClick={handleNewExpense}
-            disabled={selectedMonth?.is_finalized}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Expense
-          </button>
-        </div>
+        {/* Add Expense Button */}
+        <button
+          onClick={handleNewExpense}
+          disabled={selectedMonth?.is_finalized}
+          style={{ backgroundColor: '#2563eb', color: 'white' }}
+          className="px-6 py-3 rounded-lg hover:opacity-90 disabled:bg-gray-400 text-lg font-bold"
+        >
+          + Add Expense
+        </button>
       </div>
 
       {/* Main Content */}
@@ -273,7 +271,7 @@ export default function BudgetPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Spent</span>
-                    <span className="font-semibold">${totalSpending.toFixed(2)}</span>
+                    <span className="font-semibold">€{totalSpending.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Categories</span>

@@ -45,7 +45,7 @@ export default function ExpensePieChart({ totals, categories }: ExpensePieChartP
         <div className="bg-white px-3 py-2 border border-gray-200 rounded shadow-lg">
           <p className="font-medium">{data.icon} {data.name}</p>
           <p className="text-sm text-gray-600">
-            ${data.value.toFixed(2)} ({percentage.toFixed(1)}%)
+            €{data.value.toFixed(2)} ({percentage.toFixed(1)}%)
           </p>
         </div>
       )
@@ -86,7 +86,7 @@ export default function ExpensePieChart({ totals, categories }: ExpensePieChartP
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }: any) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
+                  label={({ name, percent }: any) => `${name} €{((percent as number) * 100).toFixed(0)}%`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -104,7 +104,7 @@ export default function ExpensePieChart({ totals, categories }: ExpensePieChartP
           <div className="text-center mb-4">
             <div className="text-sm text-gray-600">Total Shown</div>
             <div className="text-2xl font-bold text-gray-900">
-              ${totalVisible.toFixed(2)}
+              €{totalVisible.toFixed(2)}
             </div>
             {excludedCategories.size > 0 && (
               <div className="text-xs text-gray-500 mt-1">
@@ -138,7 +138,7 @@ export default function ExpensePieChart({ totals, categories }: ExpensePieChartP
                       }}
                     >
                       {cat.icon} {cat.name}
-                      {categoryTotal && ` ($${categoryTotal.total_amount.toFixed(0)})`}
+                      {categoryTotal && ` ($€{categoryTotal.total_amount.toFixed(0)})`}
                     </button>
                   )
                 })}
