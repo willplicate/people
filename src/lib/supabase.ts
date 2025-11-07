@@ -31,5 +31,6 @@ export const TABLES = {
   DAILY_QUOTES: 'personal_daily_quotes',
   EXPENSE_CATEGORIES: 'expense_categories',
   BUDGET_MONTHS: 'budget_months',
-  EXPENSES: 'expenses'
+  EXPENSES: 'expenses',
+  JOURNAL_ENTRIES: 'journal_entries'
 } as const

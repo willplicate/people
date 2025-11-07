@@ -26,6 +26,15 @@ export default function MobileBottomNav() {
       )
     },
     {
+      href: '/homework',
+      label: 'Homework',
+      icon: (
+        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM9 13V19H11V13H9ZM13 13V19H15V13H13Z"/>
+        </svg>
+      )
+    },
+    {
       href: '/wedding',
       label: 'Wedding',
       icon: (
@@ -47,7 +56,7 @@ export default function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
-      <div className="grid grid-cols-4 h-16">
+      <div className="grid grid-cols-5 h-16">
         {navItems.map((item) => {
           const isActive = pathname === item.href
 

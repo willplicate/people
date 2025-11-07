@@ -188,6 +188,28 @@ export default function BudgetPage() {
     setShowExpenseForm(true)
   }
 
+  const handleUpdateBudget = async (budgetAmount: number) => {
+    if (!selectedMonth) return
+
+    try {
+      const { data, error } = await supabase
+        .from('budget_months')
+        .update({ total_budget: budgetAmount })
+        .eq('id', selectedMonth.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local state
+      setSelectedMonth(data)
+      setMonths(months.map(m => m.id === selectedMonth.id ? data : m))
+    } catch (err) {
+      console.error('Error updating budget:', err)
+      alert('Failed to update budget')
+    }
+  }
+
   const totalSpending = expenses.reduce((sum, e) => sum + e.amount, 0)
 
   if (loading) {
@@ -220,37 +242,124 @@ export default function BudgetPage() {
 
   return (
     <div className="bg-gray-50 relative">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Budget Tracker</h1>
-        {selectedMonth && (
-          <p className="text-gray-600 mb-4">
-            {new Date(selectedMonth.year, selectedMonth.month - 1).toLocaleDateString('en-US', {
-              month: 'long',
-              year: 'numeric'
-            })}
-            {selectedMonth.is_finalized && (
-              <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                Finalized
-              </span>
+      {/* Compact Header with Key Stats */}
+      <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Budget Tracker</h1>
+            {selectedMonth && (
+              <p className="text-sm text-gray-600">
+                {new Date(selectedMonth.year, selectedMonth.month - 1).toLocaleDateString('en-US', {
+                  month: 'long',
+                  year: 'numeric'
+                })}
+                {selectedMonth.is_finalized && (
+                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                    Finalized
+                  </span>
+                )}
+              </p>
             )}
-          </p>
+          </div>
+
+          {/* Key Stats - Inline */}
+          <div className="flex gap-6">
+            <div className="text-center">
+              <div className="text-xs text-gray-600">Total Spent</div>
+              <div className="text-2xl font-bold text-gray-900">€{totalSpending.toFixed(2)}</div>
+              {selectedMonth?.total_budget && (
+                <div className="text-xs text-gray-500">of €{selectedMonth.total_budget.toFixed(2)}</div>
+              )}
+            </div>
+            {selectedMonth?.total_budget && (
+              <div className="text-center">
+                <div className="text-xs text-gray-600">Remaining</div>
+                <div className={`text-2xl font-bold ${
+                  selectedMonth.total_budget - totalSpending >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  €{(selectedMonth.total_budget - totalSpending).toFixed(2)}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {((totalSpending / selectedMonth.total_budget) * 100).toFixed(0)}% used
+                </div>
+              </div>
+            )}
+            <div className="text-center">
+              <div className="text-xs text-gray-600">Expenses</div>
+              <div className="text-2xl font-bold text-gray-900">{expenses.length}</div>
+            </div>
+          </div>
+
+          {/* Add Expense Button */}
+          <button
+            onClick={handleNewExpense}
+            disabled={selectedMonth?.is_finalized}
+            style={{ backgroundColor: '#2563eb', color: 'white' }}
+            className="px-4 py-2 rounded-lg hover:opacity-90 disabled:bg-gray-400 font-semibold whitespace-nowrap"
+          >
+            + Add Expense
+          </button>
+        </div>
+
+        {/* Budget Progress Bar */}
+        {selectedMonth?.total_budget && (
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-600 mb-1">
+              <span>Budget Progress</span>
+              <button
+                onClick={() => {
+                  const newBudget = prompt('Enter monthly budget (€):', selectedMonth.total_budget?.toString() || '')
+                  if (newBudget !== null) {
+                    const amount = parseFloat(newBudget)
+                    if (!isNaN(amount) && amount >= 0) {
+                      handleUpdateBudget(amount)
+                    }
+                  }
+                }}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                Edit Budget
+              </button>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className={`h-3 rounded-full transition-all ${
+                  totalSpending > selectedMonth.total_budget
+                    ? 'bg-red-500'
+                    : totalSpending > selectedMonth.total_budget * 0.9
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
+                }`}
+                style={{
+                  width: `${Math.min((totalSpending / selectedMonth.total_budget) * 100, 100)}%`
+                }}
+              />
+            </div>
+          </div>
         )}
 
-        {/* Add Expense Button */}
-        <button
-          onClick={handleNewExpense}
-          disabled={selectedMonth?.is_finalized}
-          style={{ backgroundColor: '#2563eb', color: 'white' }}
-          className="px-6 py-3 rounded-lg hover:opacity-90 disabled:bg-gray-400 text-lg font-bold"
-        >
-          + Add Expense
-        </button>
+        {/* Set Budget Button (if no budget set) */}
+        {selectedMonth && !selectedMonth.total_budget && (
+          <button
+            onClick={() => {
+              const budget = prompt('Set monthly budget (€):')
+              if (budget !== null) {
+                const amount = parseFloat(budget)
+                if (!isNaN(amount) && amount > 0) {
+                  handleUpdateBudget(amount)
+                }
+              }
+            }}
+            className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            + Set Monthly Budget
+          </button>
+        )}
       </div>
 
       {/* Main Content */}
       <div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {/* Left Sidebar - Month Selector */}
           <div className="lg:col-span-1">
             <MonthSelector
@@ -259,27 +368,6 @@ export default function BudgetPage() {
               onSelectMonth={setSelectedMonth}
               onFinalizeMonth={handleFinalizeMonth}
             />
-
-            {/* Quick Stats */}
-            {selectedMonth && (
-              <div className="mt-6 bg-white rounded-lg shadow p-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick Stats</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Expenses</span>
-                    <span className="font-semibold">{expenses.length}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Spent</span>
-                    <span className="font-semibold">€{totalSpending.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Categories</span>
-                    <span className="font-semibold">{categoryTotals.length}</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Main Content Area */}

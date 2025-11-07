@@ -86,7 +86,7 @@ export default function ExpensePieChart({ totals, categories }: ExpensePieChartP
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }: any) => `${name} €{((percent as number) * 100).toFixed(0)}%`}
+                  label={({ name, percent }: any) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -138,7 +138,7 @@ export default function ExpensePieChart({ totals, categories }: ExpensePieChartP
                       }}
                     >
                       {cat.icon} {cat.name}
-                      {categoryTotal && ` ($€{categoryTotal.total_amount.toFixed(0)})`}
+                      {categoryTotal && ` (€${categoryTotal.total_amount.toFixed(0)})`}
                     </button>
                   )
                 })}

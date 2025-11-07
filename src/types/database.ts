@@ -231,6 +231,16 @@ export type BudgetMonth = {
   is_finalized: boolean
   finalized_at?: string
   finalized_by?: string
+  total_budget?: number // Optional global monthly budget limit
+  created_at: string
+  updated_at: string
+}
+
+export type CategoryBudget = {
+  id: string
+  month_id: string
+  category_id: string
+  budget_limit: number
   created_at: string
   updated_at: string
 }
@@ -304,4 +314,31 @@ export type ExpenseFilters = {
   date_to?: string
   search?: string
 }
+
+// Homework Journal Types
+export type JournalContentItem = {
+  text: string
+  timestamp: string // ISO 8601 timestamp
+}
+
+export type JournalEntry = {
+  id: string
+  date: string // YYYY-MM-DD format
+  content: JournalContentItem[] // Array of timestamped text entries
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+// Input types for journal entries
+export type CreateJournalEntryInput = {
+  date: string
+  text: string // The text content to add
+}
+
+export type AppendJournalEntryInput = {
+  text: string // The text content to append
+}
+
+export type UpdateJournalEntryInput = Partial<CreateJournalEntryInput>
 

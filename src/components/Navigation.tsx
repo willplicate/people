@@ -13,6 +13,7 @@ export default function Navigation() {
     { href: '/wedding', label: 'Wedding' },
     { href: '/meetings', label: 'Meetings' },
     { href: '/tasks', label: 'Tasks' },
+    { href: '/homework', label: 'Homework' },
     { href: '/urgent-tasks', label: 'Urgent', priority: true },
     { href: '/shopping', label: 'Shopping' },
     { href: '/emergency-contacts', label: 'Emergency', priority: true },

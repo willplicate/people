@@ -5,11 +5,13 @@ import UpcomingBirthdays from '@/components/dashboard/UpcomingBirthdays'
 import WorkTasks from '@/components/dashboard/WorkTasks'
 import PersonalTasks from '@/components/dashboard/PersonalTasks'
 import ShoppingList from '@/components/dashboard/ShoppingList'
+import HomeworkJournal from '@/components/dashboard/HomeworkJournal'
 
 export default function Home() {
   return (
     <div className="space-y-gutter">
       <WelcomeSection />
+      <HomeworkJournal />
       <UrgentTasks />
       <UpcomingContacts />
       <UpcomingBirthdays />
