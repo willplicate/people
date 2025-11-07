@@ -12,10 +12,13 @@ interface MobileMenuProps {
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname()
 
-  // Close menu when pathname changes
+  // Close menu when pathname changes (but not on initial mount)
   useEffect(() => {
-    onClose()
-  }, [pathname, onClose])
+    if (isOpen) {
+      onClose()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -32,29 +35,37 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/contacts', label: 'Contacts' },
+    { href: '/budget', label: 'Budget' },
     { href: '/wedding', label: 'Wedding' },
     { href: '/meetings', label: 'Meetings' },
     { href: '/tasks', label: 'Tasks' },
-    { href: '/urgent-tasks', label: 'Urgent Tasks', priority: true },
+    { href: '/homework', label: 'Homework' },
+    { href: '/urgent-tasks', label: 'Urgent', priority: true },
     { href: '/shopping', label: 'Shopping' },
-    { href: '/emergency-contacts', label: 'Emergency Contacts', priority: true },
+    { href: '/emergency-contacts', label: 'Emergency', priority: true },
     { href: '/sync', label: 'Sync' },
   ]
+
+  console.log('MobileMenu render - isOpen:', isOpen)
+
+  if (!isOpen) {
+    console.log('MobileMenu: Not rendering (closed)')
+    return null
+  }
+
+  console.log('MobileMenu: Rendering menu!')
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300 ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        className="fixed inset-0 bg-black bg-opacity-50 z-[100] md:hidden"
         onClick={onClose}
       />
 
       {/* Menu Drawer */}
-      <div className={`fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 md:hidden overflow-y-auto transition-transform duration-300 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}>
+      <div className="fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-[101] md:hidden overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-foreground">Menu</h2>

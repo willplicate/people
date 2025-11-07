@@ -19,7 +19,10 @@ export default function MobileHeader({
 
       {showMenu && (
         <button
-          onClick={onMenuClick}
+          onClick={() => {
+            console.log('MobileHeader button clicked!')
+            onMenuClick?.()
+          }}
           className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           aria-label="Menu"
         >

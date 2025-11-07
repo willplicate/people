@@ -16,9 +16,9 @@ export default function ShoppingList() {
   useEffect(() => {
     async function loadShoppingItems() {
       try {
-        const lists = await ShoppingListService.getShoppingLists()
+        const lists = await ShoppingListService.getAll({ status: 'active', limit: 1 })
         if (lists.length > 0) {
-          const items = await ShoppingListService.getShoppingItems(lists[0].id)
+          const items = await ShoppingListService.getItems(lists[0].id)
           setItems(items.slice(0, 5)) // Show first 5 items
         }
       } catch (error) {
