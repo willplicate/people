@@ -87,11 +87,11 @@ export default function WelcomeSection() {
         {/* Right side: Daily photo (1/3 width on large screens) */}
         <div className="lg:col-span-1">
           {photoUrl ? (
-            <div className="relative h-48 lg:h-full w-full rounded-card overflow-hidden bg-muted">
+            <div className="w-full rounded-card overflow-hidden bg-muted flex items-center justify-center">
               <img
                 src={photoUrl}
                 alt="Daily memory"
-                className="w-full h-full object-cover"
+                className="w-full h-auto object-contain max-h-96 lg:max-h-full"
               />
             </div>
           ) : (
