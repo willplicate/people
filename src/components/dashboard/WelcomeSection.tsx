@@ -3,24 +3,31 @@
 import { useState, useEffect } from 'react'
 import { DailyQuote } from '@/types/database'
 import { DailyQuoteService } from '@/services/DailyQuoteService'
+import { DailyPhotoService } from '@/services/DailyPhotoService'
 
 export default function WelcomeSection() {
   const [quote, setQuote] = useState<DailyQuote | null>(null)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchDailyQuote()
+    fetchDailyContent()
   }, [])
 
-  const fetchDailyQuote = async () => {
+  const fetchDailyContent = async () => {
     try {
       setLoading(true)
-      const dailyQuote = await DailyQuoteService.getDailyQuote()
+      // Fetch quote and photo independently
+      const [dailyQuote, dailyPhoto] = await Promise.all([
+        DailyQuoteService.getDailyQuote(),
+        DailyPhotoService.getDailyPhoto()
+      ])
       setQuote(dailyQuote)
+      setPhotoUrl(dailyPhoto)
     } catch (err) {
-      console.error('Error fetching daily quote:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch daily quote')
+      console.error('Error fetching daily content:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch daily content')
     } finally {
       setLoading(false)
     }
@@ -77,13 +84,13 @@ export default function WelcomeSection() {
           </blockquote>
         </div>
 
-        {/* Right side: Image placeholder (1/3 width on large screens) */}
+        {/* Right side: Daily photo (1/3 width on large screens) */}
         <div className="lg:col-span-1">
-          {quote.image_url ? (
+          {photoUrl ? (
             <div className="relative h-48 lg:h-full w-full rounded-card overflow-hidden bg-muted">
               <img
-                src={quote.image_url}
-                alt="Daily inspiration"
+                src={photoUrl}
+                alt="Daily memory"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -91,7 +98,7 @@ export default function WelcomeSection() {
             <div className="relative h-48 lg:h-full w-full rounded-card overflow-hidden bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <span className="text-6xl">📸</span>
-                <p className="text-sm mt-2">Photo memory space</p>
+                <p className="text-sm mt-2">Add photos to Supabase Storage</p>
               </div>
             </div>
           )}
