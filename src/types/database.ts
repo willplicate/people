@@ -342,3 +342,76 @@ export type AppendJournalEntryInput = {
 
 export type UpdateJournalEntryInput = Partial<CreateJournalEntryInput>
 
+// Trading Tracker Types
+export type TradingSession = {
+  id: string
+  user_id: string
+  session_date: string // DATE
+  notes?: string
+  account_balance?: number // DECIMAL(12,2)
+  balance_updated_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export type OptionType = 'CALL' | 'PUT'
+export type TradeAction = 'BUY' | 'SELL'
+export type TradeStatus = 'OPEN' | 'CLOSED' | 'EXPIRED' | 'ASSIGNED'
+
+export type OptionsTrade = {
+  id: string
+  session_id: string
+  user_id: string
+  trade_date: string // DATE
+  ticker_symbol: string
+  option_type: OptionType
+  action: TradeAction
+  strike_price: number // DECIMAL(10,2)
+  premium_per_contract: number // DECIMAL(10,2)
+  number_of_contracts: number
+  expiration_date: string // DATE
+  delta?: number // DECIMAL(5,4)
+  status: TradeStatus
+  closing_date?: string // DATE
+  closing_premium?: number // DECIMAL(10,2)
+  realized_pl?: number // DECIMAL(10,2) - Profit/Loss
+  trade_rationale?: string
+  framework_notes?: string
+  strategy_group_id?: string // UUID - Links multi-leg strategies together
+  strategy_name?: string // e.g., 'PUT_CONDOR', 'IRON_CONDOR', 'VERTICAL_SPREAD'
+  created_at: string
+  updated_at: string
+}
+
+export type ChatMessageRole = 'user' | 'assistant'
+
+export type TradingChatMessage = {
+  id: string
+  session_id: string
+  user_id: string
+  role: ChatMessageRole
+  content: string
+  created_at: string
+}
+
+// Input types for trading
+export type CreateTradingSessionInput = Omit<TradingSession, 'id' | 'created_at' | 'updated_at'>
+export type UpdateTradingSessionInput = Partial<CreateTradingSessionInput>
+
+export type CreateOptionsTradeInput = Omit<OptionsTrade, 'id' | 'created_at' | 'updated_at'>
+export type UpdateOptionsTradeInput = Partial<CreateOptionsTradeInput>
+
+export type CreateTradingChatMessageInput = Omit<TradingChatMessage, 'id' | 'created_at'>
+
+// Trade data extracted from screenshot
+export type ExtractedTradeData = {
+  ticker?: string
+  optionType?: OptionType
+  action?: TradeAction
+  strikePrice?: number
+  premiumPerContract?: number
+  numberOfContracts?: number
+  expirationDate?: string
+  delta?: number
+}
+
