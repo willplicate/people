@@ -330,4 +330,38 @@ export class ContactService {
 
     return count || 0
   }
+
+  /**
+   * Get contacts needing reminders with primary phone numbers for WhatsApp outreach
+   */
+  static async getContactsWithPrimaryPhone(): Promise<Array<{
+    contact: Contact
+    primaryPhone: string
+  }>> {
+    // Get contacts needing reminders (reuse existing logic)
+    const contactsNeedingReminders = await this.getContactsNeedingReminders()
+
+    // For each contact, fetch primary phone from ContactInfo
+    const contactsWithPhone = await Promise.all(
+      contactsNeedingReminders.map(async (contact) => {
+        const primaryPhone = await ContactInfoService.getPrimaryByContactIdAndType(
+          contact.id,
+          'phone'
+        )
+
+        if (primaryPhone) {
+          return {
+            contact,
+            primaryPhone: primaryPhone.value
+          }
+        }
+        return null
+      })
+    )
+
+    // Filter out contacts without primary phone
+    return contactsWithPhone.filter((item): item is { contact: Contact; primaryPhone: string } =>
+      item !== null
+    )
+  }
 }
