@@ -12,16 +12,18 @@
     "test:e2e:open": "cypress open"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.71.2",
     "@next-auth/supabase-adapter": "^0.2.1",
     "@supabase/supabase-js": "^2.39.0",
     "dotenv": "^17.2.3",
     "googleapis": "^160.0.0",
-    "next": "15.5.3",
+    "next": "^15.5.9",
     "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^3.3.0"
+    "recharts": "^3.3.0",
+    "zod": "4.3.4"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
