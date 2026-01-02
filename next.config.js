@@ -1,11 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable static export for GitHub Pages
-  output: 'export',
+  // COMMENTED OUT FOR DEVELOPMENT - API routes need server
+  // output: 'export',
 
   // Enable base path for GitHub Pages
-  basePath: '/people',
-  assetPrefix: '/people',
+  // COMMENTED OUT FOR DEVELOPMENT
+  // basePath: '/people',
+  // assetPrefix: '/people',
+
+  // Fix workspace root detection
+  outputFileTracingRoot: __dirname,
 
   // Disable image optimization for static export
   images: {

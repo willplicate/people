@@ -32,5 +32,12 @@ export const TABLES = {
   EXPENSE_CATEGORIES: 'expense_categories',
   BUDGET_MONTHS: 'budget_months',
   EXPENSES: 'expenses',
-  JOURNAL_ENTRIES: 'journal_entries'
+  JOURNAL_ENTRIES: 'journal_entries',
+  TRADING_SESSIONS: 'trading_sessions',
+  OPTIONS_TRADES: 'options_trades',
+  TRADING_CHAT_MESSAGES: 'trading_chat_messages',
+  LIFE_HABITS: 'life_habits',
+  LIFE_HABIT_LOGS: 'life_habit_logs',
+  LIFE_COACH_MESSAGES: 'life_coach_messages',
+  LIFE_INSIGHTS: 'life_insights'
 } as const
