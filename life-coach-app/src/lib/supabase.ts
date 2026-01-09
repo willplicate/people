@@ -10,5 +10,6 @@ export const TABLES = {
   LIFE_HABITS: 'life_habits',
   LIFE_HABIT_LOGS: 'life_habit_logs',
   LIFE_COACH_MESSAGES: 'life_coach_messages',
-  LIFE_INSIGHTS: 'life_insights'
+  LIFE_INSIGHTS: 'life_insights',
+  TEAM_WILCAS_TASKS: 'team_wilcas_tasks'
 } as const

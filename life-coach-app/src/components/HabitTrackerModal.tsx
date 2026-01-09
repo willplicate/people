@@ -390,12 +390,37 @@ export default function HabitTrackerModal({ userId, isOpen, onClose }: HabitTrac
           )}
         </div>
 
-        {/* Admin Link */}
+        {/* Navigation Links */}
         <div style={{
           borderTop: '1px solid #e5e7eb',
           padding: '1rem 1.5rem',
-          flexShrink: 0
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
         }}>
+          <a
+            href="/team-wilcas"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#f9fafb',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              color: '#374151',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+          >
+            <span>✅</span>
+            <span>Team Wilcas Tasks</span>
+          </a>
+
           <a
             href="/admin"
             style={{
