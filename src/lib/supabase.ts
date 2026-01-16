@@ -39,5 +39,6 @@ export const TABLES = {
   LIFE_HABITS: 'life_habits',
   LIFE_HABIT_LOGS: 'life_habit_logs',
   LIFE_COACH_MESSAGES: 'life_coach_messages',
-  LIFE_INSIGHTS: 'life_insights'
+  LIFE_INSIGHTS: 'life_insights',
+  PERSONAL_ENCOUNTERS: 'personal_encounter_journal'
 } as const

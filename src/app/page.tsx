@@ -8,6 +8,7 @@ import ShoppingList from '@/components/dashboard/ShoppingList'
 import HomeworkJournal from '@/components/dashboard/HomeworkJournal'
 import DailyContactReminders from '@/components/dashboard/DailyContactReminders'
 import LifeCoachSection from '@/components/dashboard/LifeCoachSection'
+import PersonalEncounterJournal from '@/components/dashboard/PersonalEncounterJournal'
 
 // TODO: Replace with actual authenticated user ID
 const USER_ID = '00000000-0000-0000-0000-000000000000'
@@ -18,6 +19,7 @@ export default function Home() {
       <WelcomeSection />
       <LifeCoachSection userId={USER_ID} />
       <HomeworkJournal />
+      <PersonalEncounterJournal userId={USER_ID} />
       <DailyContactReminders />
       <UrgentTasks />
       <UpcomingContacts />

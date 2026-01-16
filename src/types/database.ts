@@ -478,3 +478,18 @@ export type CreateLifeCoachMessageInput = Omit<LifeCoachMessage, 'id' | 'created
 export type CreateLifeInsightInput = Omit<LifeInsight, 'id' | 'created_at'>
 export type UpdateLifeInsightInput = Partial<CreateLifeInsightInput>
 
+// Personal Encounter Journal Types
+export type PersonalEncounter = {
+  id: string
+  encounter_date: string
+  partner_description?: string
+  location?: string
+  private_notes?: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export type CreatePersonalEncounterInput = Omit<PersonalEncounter, 'id' | 'created_at' | 'updated_at' | 'created_by'>
+export type UpdatePersonalEncounterInput = Partial<CreatePersonalEncounterInput>
+
