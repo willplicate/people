@@ -493,3 +493,47 @@ export type PersonalEncounter = {
 export type CreatePersonalEncounterInput = Omit<PersonalEncounter, 'id' | 'created_at' | 'updated_at' | 'created_by'>
 export type UpdatePersonalEncounterInput = Partial<CreatePersonalEncounterInput>
 
+// Telegram Bot Types
+export type TelegramUser = {
+  id: string
+  telegram_chat_id: number
+  telegram_username?: string
+  telegram_first_name?: string
+  user_id: string
+  is_active: boolean
+  notifications_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type TelegramMessage = {
+  id: string
+  telegram_user_id: string
+  direction: 'inbound' | 'outbound'
+  message_text: string
+  command?: string
+  context_type?: 'crm' | 'trading' | 'habits' | 'ai_chat'
+  telegram_message_id?: number
+  error_message?: string
+  created_at: string
+}
+
+export type TelegramConversationState = {
+  id: string
+  telegram_user_id: string
+  state_key: string
+  state_data?: Record<string, any>
+  expires_at?: string
+  created_at: string
+  updated_at: string
+}
+
+// Input types for Telegram
+export type CreateTelegramUserInput = Omit<TelegramUser, 'id' | 'created_at' | 'updated_at'>
+export type UpdateTelegramUserInput = Partial<CreateTelegramUserInput>
+
+export type CreateTelegramMessageInput = Omit<TelegramMessage, 'id' | 'created_at'>
+
+export type CreateTelegramConversationStateInput = Omit<TelegramConversationState, 'id' | 'created_at' | 'updated_at'>
+export type UpdateTelegramConversationStateInput = Partial<CreateTelegramConversationStateInput>
+

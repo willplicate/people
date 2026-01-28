@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.39.0",
     "dotenv": "^17.2.3",
     "googleapis": "^160.0.0",
+    "grammy": "^1.39.3",
     "next": "^15.5.9",
     "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
