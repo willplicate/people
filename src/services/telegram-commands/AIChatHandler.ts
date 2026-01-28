@@ -4,6 +4,7 @@ import { TelegramUserService } from '../TelegramUserService'
 import { ContactService } from '../ContactService'
 import { InteractionService } from '../InteractionService'
 import { TaskService } from '../TaskService'
+import { TradingService } from '../TradingService'
 import { formatError } from '@/lib/telegram/formatting'
 import { supabase } from '@/lib/supabase'
 import fs from 'fs'
@@ -26,21 +27,30 @@ export class AIChatHandler {
       const coachPath = path.join(process.cwd(), 'scripts', 'LIFE_COACH.md')
       const coachContent = fs.readFileSync(coachPath, 'utf-8')
 
-      return `You are William's personal assistant and life coach, integrated into his Telegram bot.
+      return `You are James, William's helpful best friend who happens to be an AI. You're intelligent, funny, and genuinely care about helping him stay on track.
 
+## Your Personality
+- **Tone**: Like a smart, witty best friend - not a formal assistant
+- **Humor**: Use it naturally, especially when William is being hard on himself
+- **Directness**: Call him out lovingly when he's drifting from his goals
+- **Support**: Celebrate wins, encourage during struggles
+- **Never**: Use corporate speak, be overly formal, or patronizing
+
+## What You Know About William
 ${coachContent}
 
-## Your Role via Telegram
-You help William manage his life through natural conversation:
-- Check upcoming birthdays and contacts needing outreach
-- Log interactions with people
-- Provide life coaching based on the framework above
-- Be conversational, supportive, and direct when needed
+## What You Help With
+Via natural conversation and tools:
+- Manage contacts and remember to reach out to people
+- Track birthdays and life events
+- Log tasks and keep him accountable
+- Record trading activity (his Turtle strategy)
+- Provide coaching based on his framework above
 
-When William asks about contacts, birthdays, or wants to log interactions, use the provided tools.
-For life coaching or general chat, respond conversationally based on the framework above.
+When he asks about contacts, tasks, trades, or life stuff, use the available tools.
+For coaching or chat, respond like a supportive best friend would.
 
-Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formatting sparingly.`
+Keep it concise for Telegram (2-3 paragraphs max). Be real, be helpful, be James.`
     } catch (error) {
       console.error('Error reading LIFE_COACH.md:', error)
       return `You are William's personal assistant. Help him manage contacts, track birthdays, and provide support. Be concise and helpful.`
@@ -182,7 +192,107 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
           required: [],
         },
       },
+      {
+        name: 'log_trade',
+        description:
+          'Log an options trade (LEAPS strategy). Use when William mentions buying/selling calls or puts. Extract ticker, action (BUY/SELL), option type, strike price, premium, expiration, and number of contracts from natural language.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            ticker_symbol: {
+              type: 'string',
+              description: 'Stock ticker symbol (e.g., SPY, AAPL)',
+            },
+            action: {
+              type: 'string',
+              enum: ['BUY', 'SELL'],
+              description: 'Whether buying or selling',
+            },
+            option_type: {
+              type: 'string',
+              enum: ['CALL', 'PUT'],
+              description: 'Call or Put option',
+            },
+            strike_price: {
+              type: 'number',
+              description: 'Strike price of the option',
+            },
+            premium_per_contract: {
+              type: 'number',
+              description: 'Premium price per contract in dollars',
+            },
+            number_of_contracts: {
+              type: 'number',
+              description: 'Number of contracts (default: 1)',
+              default: 1,
+            },
+            expiration_date: {
+              type: 'string',
+              description: 'Expiration date - can be relative like "next Friday" or absolute like "2026-03-21"',
+            },
+            notes: {
+              type: 'string',
+              description: 'Optional notes about the trade rationale',
+            },
+          },
+          required: ['action', 'option_type', 'strike_price', 'premium_per_contract', 'expiration_date'],
+        },
+      },
     ]
+  }
+
+  /**
+   * Parse relative date expressions like "next Friday", "this Friday", "Jan 15"
+   */
+  private static parseRelativeDate(dateStr: string): string {
+    const lower = dateStr.toLowerCase().trim()
+    const today = new Date()
+
+    // Handle "next Friday", "this Friday", etc.
+    const dayMatch = lower.match(/(next|this)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i)
+    if (dayMatch) {
+      const isNext = dayMatch[1] === 'next'
+      const targetDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(
+        dayMatch[2].toLowerCase()
+      )
+
+      let daysAhead = (targetDay - today.getDay() + 7) % 7
+      if (daysAhead === 0) daysAhead = 7 // If today, go to next week
+      if (isNext) daysAhead += 7
+
+      const targetDate = new Date(today)
+      targetDate.setDate(today.getDate() + daysAhead)
+      return targetDate.toISOString().split('T')[0]
+    }
+
+    // Handle "tomorrow"
+    if (lower === 'tomorrow') {
+      const tomorrow = new Date(today)
+      tomorrow.setDate(today.getDate() + 1)
+      return tomorrow.toISOString().split('T')[0]
+    }
+
+    // Handle "in X days"
+    const daysMatch = lower.match(/in\s+(\d+)\s+days?/i)
+    if (daysMatch) {
+      const days = parseInt(daysMatch[1])
+      const targetDate = new Date(today)
+      targetDate.setDate(today.getDate() + days)
+      return targetDate.toISOString().split('T')[0]
+    }
+
+    // Try to parse as date (YYYY-MM-DD, Jan 15, etc.)
+    try {
+      const parsed = new Date(dateStr)
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0]
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+
+    // Return as-is if we can't parse
+    return dateStr
   }
 
   /**
@@ -418,6 +528,42 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
               category: t.category,
               due_date: t.due_date,
             })),
+          }
+        }
+
+        case 'log_trade': {
+          // Parse expiration date
+          const expirationDate = this.parseRelativeDate(input.expiration_date)
+
+          // Get or create today's trading session
+          const session = await TradingService.getOrCreateTodaySession('default-user')
+
+          // Determine status (OPEN if buying, CLOSED if selling existing position)
+          const status = input.action === 'BUY' ? 'OPEN' : 'CLOSED'
+
+          // Create the trade
+          const trade = await TradingService.createTrade({
+            session_id: session.id,
+            user_id: 'default-user',
+            trade_date: new Date().toISOString().split('T')[0],
+            ticker_symbol: input.ticker_symbol?.toUpperCase() || 'UNKNOWN',
+            option_type: input.option_type,
+            action: input.action,
+            strike_price: input.strike_price,
+            premium_per_contract: input.premium_per_contract,
+            number_of_contracts: input.number_of_contracts || 1,
+            expiration_date: expirationDate,
+            status: status,
+            trade_rationale: input.notes,
+          })
+
+          const actionText = input.action === 'BUY' ? 'Bought' : 'Sold'
+          const contractText = (input.number_of_contracts || 1) === 1 ? 'contract' : 'contracts'
+
+          return {
+            success: true,
+            message: `${actionText} ${input.number_of_contracts || 1} ${input.ticker_symbol || ''} ${input.option_type} ${contractText} @ $${input.strike_price} strike for $${input.premium_per_contract}, exp ${expirationDate}`,
+            trade_id: trade.id,
           }
         }
 
