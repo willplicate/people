@@ -166,28 +166,14 @@ export class TelegramCommandRouter {
   }
 
   /**
-   * Handle AI chat (Phase 3 - placeholder for now)
+   * Handle AI chat (Phase 3)
    */
   private static async handleAIChat(
     telegramUserId: string,
     chatId: number,
     messageText: string
   ): Promise<void> {
-    const telegramService = getTelegramService()
-
-    // Log as AI chat context
-    await TelegramUserService.logMessage(
-      telegramUserId,
-      'inbound',
-      messageText,
-      { contextType: 'ai_chat' }
-    )
-
-    // Placeholder response
-    await telegramService.sendMessage(
-      chatId,
-      `You said: ${messageText}\n\n(AI chat integration coming in Phase 3!)`,
-      { parse_mode: 'Markdown' }
-    )
+    const { AIChatHandler } = await import('./telegram-commands/AIChatHandler')
+    await AIChatHandler.handleAIChat(telegramUserId, chatId, messageText)
   }
 }
