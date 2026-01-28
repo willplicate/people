@@ -3,6 +3,7 @@ import { getTelegramService } from '../TelegramService'
 import { TelegramUserService } from '../TelegramUserService'
 import { ContactService } from '../ContactService'
 import { InteractionService } from '../InteractionService'
+import { TaskService } from '../TaskService'
 import { formatError } from '@/lib/telegram/formatting'
 import { supabase } from '@/lib/supabase'
 import fs from 'fs'
@@ -113,6 +114,72 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
             },
           },
           required: ['contact_name', 'interaction_type'],
+        },
+      },
+      {
+        name: 'create_task',
+        description:
+          'Create a new task/todo item. Use this when the user wants to add a task, create a reminder, or remember to do something.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              description: 'Short title for the task',
+            },
+            description: {
+              type: 'string',
+              description: 'Optional detailed description',
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'urgent'],
+              description: 'Task priority (default: medium)',
+              default: 'medium',
+            },
+            category: {
+              type: 'string',
+              enum: ['work', 'personal'],
+              description: 'Task category (default: personal)',
+              default: 'personal',
+            },
+            due_date: {
+              type: 'string',
+              description: 'Optional due date in YYYY-MM-DD format',
+            },
+          },
+          required: ['title'],
+        },
+      },
+      {
+        name: 'get_tasks',
+        description:
+          'Get tasks/todo items. Use this when the user asks to see their tasks, what they need to do, or their todo list.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              enum: ['todo', 'in_progress', 'completed', 'cancelled'],
+              description: 'Filter by status (default: show all)',
+            },
+            priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'urgent'],
+              description: 'Filter by priority',
+            },
+            category: {
+              type: 'string',
+              enum: ['work', 'personal'],
+              description: 'Filter by category',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of tasks to return (default: 10)',
+              default: 10,
+            },
+          },
+          required: [],
         },
       },
     ]
@@ -310,6 +377,47 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
           return {
             success: true,
             message: `Logged ${input.interaction_type} with ${contact.first_name}`,
+          }
+        }
+
+        case 'create_task': {
+          const task = await TaskService.create({
+            title: input.title,
+            description: input.description || undefined,
+            priority: input.priority || 'medium',
+            status: 'todo',
+            category: input.category || 'personal',
+            due_date: input.due_date || undefined,
+            tags: [],
+          })
+
+          return {
+            success: true,
+            message: `Created task: ${task.title}`,
+            task_id: task.id,
+          }
+        }
+
+        case 'get_tasks': {
+          const tasks = await TaskService.getAll({
+            status: input.status || undefined,
+            priority: input.priority || undefined,
+            category: input.category || undefined,
+            limit: input.limit || 10,
+          })
+
+          return {
+            success: true,
+            count: tasks.length,
+            tasks: tasks.map((t) => ({
+              id: t.id,
+              title: t.title,
+              description: t.description,
+              priority: t.priority,
+              status: t.status,
+              category: t.category,
+              due_date: t.due_date,
+            })),
           }
         }
 
