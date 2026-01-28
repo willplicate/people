@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { TelegramUpdate } from '@/lib/telegram/types'
-import { verifyWebhookSignature, parseCommand, isPrivateChat } from '@/lib/telegram/validation'
+import { verifyWebhookSignature, isPrivateChat } from '@/lib/telegram/validation'
 import { getTelegramService } from '@/services/TelegramService'
 import { TelegramUserService } from '@/services/TelegramUserService'
+import { TelegramCommandRouter } from '@/services/TelegramCommandRouter'
 import { formatError } from '@/lib/telegram/formatting'
 
 /**
@@ -11,7 +12,7 @@ import { formatError } from '@/lib/telegram/formatting'
  */
 export async function POST(req: NextRequest) {
   try {
-    // Verify webhook signature
+    // Verify webhook signature (if secret token is set)
     const secretToken = process.env.TELEGRAM_WEBHOOK_SECRET
     const receivedToken = req.headers.get('X-Telegram-Bot-Api-Secret-Token')
 
@@ -87,16 +88,8 @@ async function handleMessage(message: TelegramUpdate['message']) {
       }
     )
 
-    // Parse command
-    const parsedCommand = parseCommand(message.text)
-
-    if (parsedCommand) {
-      // Handle command
-      await handleCommand(user.id, chatId, parsedCommand.command, parsedCommand.rawArgs)
-    } else {
-      // Handle conversation state or AI chat
-      await handleMessageOrAIChat(user.id, chatId, message.text)
-    }
+    // Route message through command router
+    await TelegramCommandRouter.route(user.id, chatId, message.text)
   } catch (error) {
     console.error('Error handling message:', error)
 
@@ -106,157 +99,4 @@ async function handleMessage(message: TelegramUpdate['message']) {
       { parse_mode: 'Markdown' }
     )
   }
-}
-
-/**
- * Handle command
- */
-async function handleCommand(
-  userId: string,
-  chatId: number,
-  command: string,
-  args: string
-) {
-  const telegramService = getTelegramService()
-
-  // Log command
-  await TelegramUserService.logMessage(
-    userId,
-    'inbound',
-    `/${command} ${args}`,
-    {
-      command,
-    }
-  )
-
-  switch (command) {
-    case 'start':
-      await handleStartCommand(chatId)
-      break
-
-    case 'help':
-      await handleHelpCommand(chatId)
-      break
-
-    case 'settings':
-      await handleSettingsCommand(chatId, userId)
-      break
-
-    default:
-      await telegramService.sendMessage(
-        chatId,
-        formatError(`Unknown command: /${command}\n\nUse /help to see available commands.`),
-        { parse_mode: 'Markdown' }
-      )
-  }
-}
-
-/**
- * Handle /start command
- */
-async function handleStartCommand(chatId: number) {
-  const telegramService = getTelegramService()
-
-  const welcomeMessage = `Welcome to your Personal CRM & Life Coach! 👋
-
-I can help you with:
-• Managing contacts and reminders
-• Tracking your trading positions
-• Building better habits
-• AI-powered life coaching
-
-Use /help to see all available commands.`
-
-  await telegramService.sendMessage(
-    chatId,
-    welcomeMessage,
-    { parse_mode: 'Markdown' }
-  )
-}
-
-/**
- * Handle /help command
- */
-async function handleHelpCommand(chatId: number) {
-  const telegramService = getTelegramService()
-
-  const helpMessage = `*Available Commands:*
-
-*CRM & Contacts*
-/birthdays \\[days\\] \\- Show upcoming birthdays
-/contacts \\- Contacts needing outreach
-/reminders \\- Pending reminders
-/log \\{name\\} \\- Log an interaction
-
-*Trading*
-/positions \\- Show active LEAPS positions
-/pl \\[period\\] \\- Profit/loss summary
-/health \\- Position health check
-/add\\_trade \\- Add a new trade
-
-*Habits*
-/habits \\- Today's habits status
-/log\\_habit \\{name\\} \\- Log habit completion
-/habit\\_stats \\- Habit statistics
-
-*General*
-/help \\- Show this help message
-/settings \\- Notification preferences
-
-*AI Chat*
-Just send me a message and I'll chat with you using Claude\\!`
-
-  await telegramService.sendMessage(
-    chatId,
-    helpMessage,
-    { parse_mode: 'Markdown' }
-  )
-}
-
-/**
- * Handle /settings command
- */
-async function handleSettingsCommand(chatId: number, userId: string) {
-  const telegramService = getTelegramService()
-
-  const settingsMessage = `*Settings*
-
-Notification preferences coming soon!
-
-For now, all notifications are enabled by default.`
-
-  await telegramService.sendMessage(
-    chatId,
-    settingsMessage,
-    { parse_mode: 'Markdown' }
-  )
-}
-
-/**
- * Handle regular message (check for conversation state or route to AI chat)
- */
-async function handleMessageOrAIChat(
-  userId: string,
-  chatId: number,
-  messageText: string
-) {
-  const telegramService = getTelegramService()
-
-  // TODO: Check for active conversation state
-  // For now, just echo back (placeholder for AI chat integration)
-  await telegramService.sendMessage(
-    chatId,
-    `You said: ${messageText}\n\n(AI chat integration coming soon!)`,
-    { parse_mode: 'Markdown' }
-  )
-
-  // Log as AI chat context
-  await TelegramUserService.logMessage(
-    userId,
-    'inbound',
-    messageText,
-    {
-      contextType: 'ai_chat',
-    }
-  )
 }
