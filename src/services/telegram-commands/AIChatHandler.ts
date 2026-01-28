@@ -4,6 +4,7 @@ import { TelegramUserService } from '../TelegramUserService'
 import { ContactService } from '../ContactService'
 import { InteractionService } from '../InteractionService'
 import { formatError } from '@/lib/telegram/formatting'
+import { supabase } from '@/lib/supabase'
 import fs from 'fs'
 import path from 'path'
 
@@ -145,7 +146,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
 
       // Call Claude API with tools
       let response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 1024,
         system: this.getSystemPrompt(),
         messages,
@@ -181,7 +182,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
         })
 
         response = await this.anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 1024,
           system: this.getSystemPrompt(),
           messages,
@@ -334,8 +335,6 @@ Keep responses concise for Telegram (2-3 paragraphs max). Use Markdown formattin
     telegramUserId: string
   ): Promise<Anthropic.MessageParam[]> {
     try {
-      const { supabase } = await import('@/lib/supabase')
-
       const { data: messages } = await supabase
         .from('telegram_messages')
         .select('*')
