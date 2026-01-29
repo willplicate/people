@@ -25,6 +25,7 @@ export class TelegramUserService {
     telegramFirstName?: string
   ): Promise<TelegramUser | null> {
     // Use singleton supabase client
+    console.log('[TelegramUserService.getOrCreateUser] Looking for chatId:', telegramChatId)
 
     // Try to find existing user
     const { data: existingUser } = await supabase
@@ -34,6 +35,7 @@ export class TelegramUserService {
       .single()
 
     if (existingUser) {
+      console.log('[TelegramUserService.getOrCreateUser] Found existing user:', existingUser.id, 'user_id:', existingUser.user_id)
       // Update username/first_name if changed
       if (
         existingUser.telegram_username !== telegramUsername ||
@@ -57,6 +59,7 @@ export class TelegramUserService {
 
     // Create new user with a generated UUID for both id and user_id
     const newUserId = randomUUID()
+    console.log('[TelegramUserService.getOrCreateUser] Creating new user with UUID:', newUserId)
 
     const { data: newUser, error } = await supabase
       .from('telegram_users')
@@ -73,10 +76,11 @@ export class TelegramUserService {
       .single()
 
     if (error) {
-      console.error('Error creating Telegram user:', error)
+      console.error('[TelegramUserService.getOrCreateUser] Error creating Telegram user:', error)
       return null
     }
 
+    console.log('[TelegramUserService.getOrCreateUser] Created new user:', newUser.id, 'user_id:', newUser.user_id)
     return newUser
   }
 

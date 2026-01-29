@@ -55,6 +55,7 @@ export class LifeCoachService {
    * Get all habits for a user
    */
   static async getHabitsByUserId(userId: string): Promise<LifeHabit[]> {
+    console.log(`[LifeCoachService.getHabitsByUserId] Called with userId: "${userId}" (type: ${typeof userId})`)
     const { data, error } = await supabase
       .from(TABLES.LIFE_HABITS)
       .select()

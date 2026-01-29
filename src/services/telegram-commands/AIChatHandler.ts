@@ -391,11 +391,13 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
 
     try {
       // Get or create the Telegram user to get their UUID
+      console.log('[AIChatHandler] Getting Telegram user for chatId:', chatId)
       const telegramUser = await TelegramUserService.getOrCreateUser(chatId)
       if (!telegramUser) {
         throw new Error('Failed to get/create Telegram user')
       }
       const userId = telegramUser.id // Use the Telegram user's UUID
+      console.log('[AIChatHandler] Got userId:', userId, 'user_id field:', telegramUser.user_id)
 
       // Send typing indicator
       await telegramService.sendChatAction(chatId, 'typing')
@@ -517,6 +519,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
     input: any,
     userId: string
   ): Promise<any> {
+    console.log(`[executeTool] Called with userId: "${userId}" (type: ${typeof userId})`)
     try {
       switch (toolName) {
         case 'get_upcoming_birthdays': {
