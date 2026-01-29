@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { randomUUID } from 'crypto'
 import {
   TelegramUser,
   CreateTelegramUserInput,
@@ -21,8 +22,7 @@ export class TelegramUserService {
   static async getOrCreateUser(
     telegramChatId: number,
     telegramUsername?: string,
-    telegramFirstName?: string,
-    userId = 'default-user' // TODO: Get from auth session
+    telegramFirstName?: string
   ): Promise<TelegramUser | null> {
     // Use singleton supabase client
 
@@ -55,14 +55,17 @@ export class TelegramUserService {
       return existingUser
     }
 
-    // Create new user
+    // Create new user with a generated UUID for both id and user_id
+    const newUserId = randomUUID()
+
     const { data: newUser, error } = await supabase
       .from('telegram_users')
       .insert({
+        id: newUserId,
         telegram_chat_id: telegramChatId,
         telegram_username: telegramUsername,
         telegram_first_name: telegramFirstName,
-        user_id: userId,
+        user_id: newUserId, // Use same UUID for user_id
         is_active: true,
         notifications_enabled: true,
       })
