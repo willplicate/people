@@ -390,6 +390,13 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
     const telegramService = getTelegramService()
 
     try {
+      // Get or create the Telegram user to get their UUID
+      const telegramUser = await TelegramUserService.getOrCreateUser(chatId)
+      if (!telegramUser) {
+        throw new Error('Failed to get/create Telegram user')
+      }
+      const userId = telegramUser.id // Use the Telegram user's UUID
+
       // Send typing indicator
       await telegramService.sendChatAction(chatId, 'typing')
 
@@ -424,7 +431,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
 
         // Execute tool
         console.log(`Executing tool: ${toolUse.name} with input:`, toolUse.input)
-        const toolResult = await this.executeTool(toolUse.name, toolUse.input)
+        const toolResult = await this.executeTool(toolUse.name, toolUse.input, userId)
         console.log(`Tool result:`, toolResult)
 
         // Continue conversation with tool result
@@ -507,7 +514,8 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
    */
   private static async executeTool(
     toolName: string,
-    input: any
+    input: any,
+    userId: string
   ): Promise<any> {
     try {
       switch (toolName) {
@@ -633,7 +641,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           const expirationDate = this.parseRelativeDate(input.expiration_date)
 
           // Get or create today's trading session
-          const session = await TradingService.getOrCreateTodaySession('default-user')
+          const session = await TradingService.getOrCreateTodaySession(userId)
 
           // Determine status (OPEN if buying, CLOSED if selling existing position)
           const status = input.action === 'BUY' ? 'OPEN' : 'CLOSED'
@@ -641,7 +649,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           // Create the trade
           const trade = await TradingService.createTrade({
             session_id: session.id,
-            user_id: 'default-user',
+            user_id: userId,
             trade_date: new Date().toISOString().split('T')[0],
             ticker_symbol: input.ticker_symbol?.toUpperCase() || 'UNKNOWN',
             option_type: input.option_type,
@@ -676,7 +684,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           }
 
           // Get user's habits
-          const habits = await LifeCoachService.getHabitsByUserId('default-user')
+          const habits = await LifeCoachService.getHabitsByUserId(userId)
 
           if (habits.length === 0) {
             return {
@@ -725,7 +733,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
 
         case 'get_habits': {
           // Get all habits
-          let habits = await LifeCoachService.getHabitsByUserId('default-user')
+          let habits = await LifeCoachService.getHabitsByUserId(userId)
 
           // Apply filters if provided
           if (input.type) {
@@ -745,7 +753,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           }
 
           // Get today's logs
-          const todayLogs = await LifeCoachService.getTodayHabitLogs('default-user')
+          const todayLogs = await LifeCoachService.getTodayHabitLogs(userId)
           const todayLogMap = new Map(todayLogs.map((log) => [log.habit_id, log]))
 
           // Format habits with completion status
@@ -772,7 +780,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
 
         case 'get_habit_stats': {
           // Get user's habits
-          const habits = await LifeCoachService.getHabitsByUserId('default-user')
+          const habits = await LifeCoachService.getHabitsByUserId(userId)
 
           // Fuzzy match habit name
           const habitName = input.habit_name.toLowerCase().trim()
