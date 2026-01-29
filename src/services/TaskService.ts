@@ -9,7 +9,8 @@ export class TaskService {
    * Create a new task
    */
   static async create(input: CreatePersonalTaskInput): Promise<PersonalTask> {
-    const { data, error } = await supabase
+    const client = supabase
+    const { data, error } = await client
       .from(TABLES.TASKS)
       .insert(input)
       .select()
@@ -65,7 +66,7 @@ export class TaskService {
    * Update a task
    */
   static async update(id: string, updates: UpdatePersonalTaskInput): Promise<PersonalTask> {
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from(TABLES.TASKS)
       .update(updates)
       .eq('id', id)

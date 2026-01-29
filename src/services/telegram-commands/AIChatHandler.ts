@@ -5,6 +5,7 @@ import { ContactService } from '../ContactService'
 import { InteractionService } from '../InteractionService'
 import { TaskService } from '../TaskService'
 import { TradingService } from '../TradingService'
+import { LifeCoachService } from '../LifeCoachService'
 import { formatError } from '@/lib/telegram/formatting'
 import { supabase } from '@/lib/supabase'
 
@@ -61,6 +62,7 @@ Via natural conversation and tools:
 - Track birthdays and life events
 - Log tasks and keep him accountable
 - Record trading activity (his Turtle LEAPS strategy)
+- Track habits and keep him accountable to his Year of Following Through
 - Provide coaching based on his goals and patterns above
 
 When he asks about contacts, tasks, trades, or life stuff, use the available tools.
@@ -250,6 +252,76 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           required: ['action', 'option_type', 'strike_price', 'premium_per_contract', 'expiration_date'],
         },
       },
+      {
+        name: 'log_habit',
+        description:
+          'Log a habit completion for today or a specific date. Use when user mentions completing a habit like "I did Spanish practice" or "Log swimming". Intelligently matches habit names.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            habit_name: {
+              type: 'string',
+              description: 'Name or partial name of the habit (e.g., "Spanish", "swimming", "trading")',
+            },
+            log_date: {
+              type: 'string',
+              description: 'Date to log for - can be "today" (default), "yesterday", or YYYY-MM-DD format',
+              default: 'today',
+            },
+            count: {
+              type: 'number',
+              description: 'Number of times completed (for countable habits like "swam 2 times")',
+              default: 1,
+            },
+            notes: {
+              type: 'string',
+              description: 'Optional notes about the completion',
+            },
+          },
+          required: ['habit_name'],
+        },
+      },
+      {
+        name: 'get_habits',
+        description:
+          'Get all habits with their current status, streaks, and today\'s completion status. Use when user asks "show my habits", "what are my habits", "habit status".',
+        input_schema: {
+          type: 'object',
+          properties: {
+            type: {
+              type: 'string',
+              enum: ['cultivate', 'eliminate', 'limit'],
+              description: 'Optional filter by habit type',
+            },
+            frequency: {
+              type: 'string',
+              enum: ['daily', 'weekly', 'monthly'],
+              description: 'Optional filter by frequency',
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: 'get_habit_stats',
+        description:
+          'Get detailed statistics for a specific habit including recent logs, streaks, and completion rate. Use when user asks "how\'s my Spanish habit?" or "show me swimming stats".',
+        input_schema: {
+          type: 'object',
+          properties: {
+            habit_name: {
+              type: 'string',
+              description: 'Name or partial name of the habit',
+            },
+            days: {
+              type: 'number',
+              description: 'Number of days to look back (default: 30)',
+              default: 30,
+            },
+          },
+          required: ['habit_name'],
+        },
+      },
     ]
   }
 
@@ -351,7 +423,9 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
         if (!toolUse) break
 
         // Execute tool
+        console.log(`Executing tool: ${toolUse.name} with input:`, toolUse.input)
         const toolResult = await this.executeTool(toolUse.name, toolUse.input)
+        console.log(`Tool result:`, toolResult)
 
         // Continue conversation with tool result
         messages.push({
@@ -409,9 +483,20 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
     } catch (error) {
       console.error('Error handling AI chat:', error)
 
+      // Log detailed error information
+      const errorDetails = error instanceof Error
+        ? `${error.name}: ${error.message}\n${error.stack}`
+        : JSON.stringify(error)
+      console.error('Detailed error:', errorDetails)
+
+      // Send user-friendly error message with more context
+      const errorMessage = error instanceof Error
+        ? `Sorry, I encountered an error: ${error.message}`
+        : 'Sorry, I encountered an error processing your message.'
+
       await telegramService.sendMessage(
         chatId,
-        formatError('Sorry, I encountered an error processing your message.'),
+        formatError(errorMessage),
         { parse_mode: 'Markdown' }
       )
     }
@@ -576,6 +661,171 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
             success: true,
             message: `${actionText} ${input.number_of_contracts || 1} ${input.ticker_symbol || ''} ${input.option_type} ${contractText} @ $${input.strike_price} strike for $${input.premium_per_contract}, exp ${expirationDate}`,
             trade_id: trade.id,
+          }
+        }
+
+        case 'log_habit': {
+          // Parse date (handle "today", "yesterday", or ISO date)
+          let logDate = input.log_date || 'today'
+          if (logDate === 'today') {
+            logDate = new Date().toISOString().split('T')[0]
+          } else if (logDate === 'yesterday') {
+            const yesterday = new Date()
+            yesterday.setDate(yesterday.getDate() - 1)
+            logDate = yesterday.toISOString().split('T')[0]
+          }
+
+          // Get user's habits
+          const habits = await LifeCoachService.getHabitsByUserId('default-user')
+
+          if (habits.length === 0) {
+            return {
+              success: false,
+              error: 'No habits found. Create habits first in the dashboard.',
+            }
+          }
+
+          // Fuzzy match habit name (case-insensitive, partial match)
+          const habitName = input.habit_name.toLowerCase().trim()
+          const matchedHabit = habits.find(
+            (h) =>
+              h.name.toLowerCase().includes(habitName) ||
+              habitName.includes(h.name.toLowerCase())
+          )
+
+          if (!matchedHabit) {
+            const habitNames = habits.map((h) => h.name).join(', ')
+            return {
+              success: false,
+              error: `No habit found matching "${input.habit_name}". Available habits: ${habitNames}`,
+            }
+          }
+
+          // Log the completion (upsert handles duplicates)
+          await LifeCoachService.logHabitCompletion({
+            habit_id: matchedHabit.id,
+            log_date: logDate,
+            completed: true,
+            count: input.count || 1,
+            notes: input.notes || undefined,
+          })
+
+          // Get updated habit to show new streak
+          const updatedHabit = await LifeCoachService.getHabitById(matchedHabit.id)
+          const currentStreak = updatedHabit?.current_streak || 0
+
+          return {
+            success: true,
+            message: `Logged ${matchedHabit.name} for ${logDate}`,
+            habit: matchedHabit.name,
+            date: logDate,
+            streak: currentStreak,
+          }
+        }
+
+        case 'get_habits': {
+          // Get all habits
+          let habits = await LifeCoachService.getHabitsByUserId('default-user')
+
+          // Apply filters if provided
+          if (input.type) {
+            habits = habits.filter((h) => h.type === input.type)
+          }
+          if (input.frequency) {
+            habits = habits.filter((h) => h.frequency === input.frequency)
+          }
+
+          if (habits.length === 0) {
+            return {
+              success: true,
+              count: 0,
+              message: 'No habits found',
+              habits: [],
+            }
+          }
+
+          // Get today's logs
+          const todayLogs = await LifeCoachService.getTodayHabitLogs('default-user')
+          const todayLogMap = new Map(todayLogs.map((log) => [log.habit_id, log]))
+
+          // Format habits with completion status
+          const habitsWithStatus = habits.map((h) => {
+            const todayLog = todayLogMap.get(h.id)
+            return {
+              name: h.name,
+              type: h.type,
+              frequency: h.frequency,
+              completed_today: todayLog?.completed || false,
+              count_today: todayLog?.count || 0,
+              current_streak: h.current_streak,
+              longest_streak: h.longest_streak,
+              target_count: h.target_count,
+            }
+          })
+
+          return {
+            success: true,
+            count: habitsWithStatus.length,
+            habits: habitsWithStatus,
+          }
+        }
+
+        case 'get_habit_stats': {
+          // Get user's habits
+          const habits = await LifeCoachService.getHabitsByUserId('default-user')
+
+          // Fuzzy match habit name
+          const habitName = input.habit_name.toLowerCase().trim()
+          const matchedHabit = habits.find(
+            (h) =>
+              h.name.toLowerCase().includes(habitName) ||
+              habitName.includes(h.name.toLowerCase())
+          )
+
+          if (!matchedHabit) {
+            return {
+              success: false,
+              error: `No habit found matching "${input.habit_name}"`,
+            }
+          }
+
+          // Get logs for date range
+          const days = input.days || 30
+          const endDate = new Date()
+          const startDate = new Date(endDate)
+          startDate.setDate(startDate.getDate() - days)
+
+          const logs = await LifeCoachService.getHabitLogs(
+            matchedHabit.id,
+            startDate.toISOString().split('T')[0],
+            endDate.toISOString().split('T')[0]
+          )
+
+          // Calculate stats
+          const completedLogs = logs.filter((l) => l.completed)
+          const completionRate =
+            logs.length > 0 ? Math.round((completedLogs.length / logs.length) * 100) : 0
+
+          // Get last 7 days
+          const last7Days = logs.slice(0, 7).map((l) => ({
+            date: l.log_date,
+            completed: l.completed,
+            count: l.count,
+            notes: l.notes,
+          }))
+
+          return {
+            success: true,
+            habit: {
+              name: matchedHabit.name,
+              type: matchedHabit.type,
+              frequency: matchedHabit.frequency,
+              current_streak: matchedHabit.current_streak,
+              longest_streak: matchedHabit.longest_streak,
+              completion_rate: completionRate,
+              total_completions: completedLogs.length,
+              last_7_days: last7Days,
+            },
           }
         }
 
