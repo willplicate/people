@@ -176,6 +176,49 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
         },
       },
       {
+        name: 'complete_task',
+        description:
+          'Mark a task as completed. Use this when the user says they finished a task, completed something, or wants to check off a task.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            task_title: {
+              type: 'string',
+              description: 'Title or partial title of the task to complete (will fuzzy match)',
+            },
+          },
+          required: ['task_title'],
+        },
+      },
+      {
+        name: 'update_task',
+        description:
+          'Update an existing task. Use this when the user wants to change task details like title, priority, or due date.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            task_title: {
+              type: 'string',
+              description: 'Title or partial title of the task to update (will fuzzy match)',
+            },
+            new_title: {
+              type: 'string',
+              description: 'New title for the task',
+            },
+            new_priority: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'urgent'],
+              description: 'New priority for the task',
+            },
+            new_due_date: {
+              type: 'string',
+              description: 'New due date in YYYY-MM-DD format',
+            },
+          },
+          required: ['task_title'],
+        },
+      },
+      {
         name: 'get_tasks',
         description:
           'Get tasks/todo items. Use this when the user asks to see their tasks, what they need to do, or their todo list.',
@@ -613,6 +656,71 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
             success: true,
             message: `Created task: ${task.title}`,
             task_id: task.id,
+          }
+        }
+
+        case 'complete_task': {
+          // Search for task by title (fuzzy match)
+          const allTasks = await TaskService.getAll({ status: 'todo', limit: 100 })
+          const searchTerm = input.task_title.toLowerCase().trim()
+
+          const matchedTask = allTasks.find(
+            (t) =>
+              t.title.toLowerCase().includes(searchTerm) ||
+              searchTerm.includes(t.title.toLowerCase())
+          )
+
+          if (!matchedTask) {
+            return {
+              success: false,
+              error: `No todo task found matching "${input.task_title}"`,
+            }
+          }
+
+          // Mark as completed
+          const updated = await TaskService.update(matchedTask.id, {
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          })
+
+          return {
+            success: true,
+            message: `Marked "${updated.title}" as completed!`,
+            task_id: updated.id,
+          }
+        }
+
+        case 'update_task': {
+          // Search for task by title (fuzzy match)
+          const allTasks = await TaskService.getAll({ limit: 100 })
+          const searchTerm = input.task_title.toLowerCase().trim()
+
+          const matchedTask = allTasks.find(
+            (t) =>
+              t.title.toLowerCase().includes(searchTerm) ||
+              searchTerm.includes(t.title.toLowerCase())
+          )
+
+          if (!matchedTask) {
+            return {
+              success: false,
+              error: `No task found matching "${input.task_title}"`,
+            }
+          }
+
+          // Build updates object
+          const updates: any = {}
+          if (input.new_title) updates.title = input.new_title
+          if (input.new_priority) updates.priority = input.new_priority
+          if (input.new_due_date) updates.due_date = input.new_due_date
+
+          // Update task
+          const updated = await TaskService.update(matchedTask.id, updates)
+
+          return {
+            success: true,
+            message: `Updated task: ${updated.title}`,
+            task_id: updated.id,
           }
         }
 
