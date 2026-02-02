@@ -378,6 +378,38 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
         },
       },
       {
+        name: 'create_habit',
+        description:
+          'Create a new habit to track. Use when user says "I want to track X", "add a habit for Y", "start tracking Z". Examples: "I want to track meditation", "add a habit for Spanish practice", "start tracking my coffee limit".',
+        input_schema: {
+          type: 'object',
+          properties: {
+            habit_name: {
+              type: 'string',
+              description: 'Name of the habit (e.g., "Meditation", "Spanish practice", "Coffee")',
+            },
+            type: {
+              type: 'string',
+              enum: ['cultivate', 'eliminate', 'limit'],
+              description:
+                'Type of habit: "cultivate" for building positive habits, "eliminate" for stopping bad habits, "limit" for limiting frequency of an activity',
+            },
+            frequency: {
+              type: 'string',
+              enum: ['daily', 'weekly', 'monthly'],
+              description: 'How often to track this habit',
+            },
+            target_count: {
+              type: 'number',
+              description:
+                'Target count per frequency period. For "limit" habits, this is the maximum (e.g., 2 for "max 2 coffees daily"). Default: 1',
+              default: 1,
+            },
+          },
+          required: ['habit_name', 'type', 'frequency'],
+        },
+      },
+      {
         name: 'log_habit',
         description:
           'Log a habit completion for today or a specific date. Use when user mentions completing a habit like "I did Spanish practice" or "Log swimming". Intelligently matches habit names.',
@@ -1082,6 +1114,31 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           }
         }
 
+        case 'create_habit': {
+          // Create new habit
+          const newHabit = await LifeCoachService.createHabit({
+            user_id: userId,
+            name: input.habit_name.trim(),
+            type: input.type,
+            frequency: input.frequency,
+            target_count: input.target_count || 1,
+            current_streak: 0,
+            longest_streak: 0,
+          })
+
+          const typeEmoji =
+            input.type === 'cultivate' ? '✨' :
+            input.type === 'eliminate' ? '🚫' :
+            '⚖️'
+
+          return {
+            success: true,
+            message: `${typeEmoji} Created habit: ${newHabit.name} (${newHabit.type}, ${newHabit.frequency})`,
+            habit_id: newHabit.id,
+            habit_name: newHabit.name,
+          }
+        }
+
         case 'log_habit': {
           // Parse date (handle "today", "yesterday", or ISO date)
           let logDate = input.log_date || 'today'
@@ -1099,7 +1156,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           if (habits.length === 0) {
             return {
               success: false,
-              error: 'No habits found. Create habits first in the dashboard.',
+              error: 'No habits found. Tell me what habit you want to track and I\'ll create it for you!',
             }
           }
 
@@ -1115,7 +1172,7 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
             const habitNames = habits.map((h) => h.name).join(', ')
             return {
               success: false,
-              error: `No habit found matching "${input.habit_name}". Available habits: ${habitNames}`,
+              error: `No habit found matching "${input.habit_name}". Available habits: ${habitNames}. Want me to create a new one?`,
             }
           }
 
@@ -1132,9 +1189,11 @@ Keep responses concise for Telegram (2-3 paragraphs max). Be real, be helpful, b
           const updatedHabit = await LifeCoachService.getHabitById(matchedHabit.id)
           const currentStreak = updatedHabit?.current_streak || 0
 
+          const streakEmoji = currentStreak >= 7 ? '🔥' : ''
+
           return {
             success: true,
-            message: `Logged ${matchedHabit.name} for ${logDate}`,
+            message: `Logged ${matchedHabit.name} for ${logDate} ${streakEmoji}`,
             habit: matchedHabit.name,
             date: logDate,
             streak: currentStreak,
