@@ -319,6 +319,16 @@ export default function UnifiedHome() {
                           {/* Expanded Meeting Details */}
                           {isExpanded && (
                             <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+                              {/* Debug: Show all available fields */}
+                              <details className="mb-4">
+                                <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
+                                  Debug: Show all fields
+                                </summary>
+                                <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-auto max-h-40">
+                                  {JSON.stringify(meeting, null, 2)}
+                                </pre>
+                              </details>
+
                               {meeting.description ? (
                                 <div className="text-sm text-gray-700 whitespace-pre-wrap">
                                   <div className="font-medium text-gray-900 mb-2">Meeting Notes:</div>

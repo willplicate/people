@@ -505,8 +505,13 @@ export type Meeting = {
   status: string // e.g., 'confirmed'
   attendees?: any[] // JSON array of attendees
   description?: string // Meeting description
+  notes?: string // Meeting notes/transcript (Granola AI notes)
+  content?: string // Alternative field for meeting content
+  transcript?: string // Meeting transcript
+  ai_summary?: string // AI-generated summary
   created_at: string
   updated_at: string
+  [key: string]: any // Allow additional fields from Granola
 }
 
 // Telegram Bot Types
