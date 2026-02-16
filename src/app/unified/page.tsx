@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { SpreadsheetItem, ItemType } from '@/types/unified'
-import { PersonalTask, Contact, PersonalRecipe, OptionsTrade } from '@/types/database'
+import { PersonalTask, Contact, PersonalRecipe, OptionsTrade, Meeting } from '@/types/database'
 import { PersonalTaskService } from '@/services/PersonalTaskService'
 import { ContactService } from '@/services/ContactService'
 import { RecipeService } from '@/services/RecipeService'
 import { TradingService } from '@/services/TradingService'
+import { MeetingService } from '@/services/MeetingService'
 import { tasksToSpreadsheetItems } from '@/adapters/taskAdapter'
 import { birthdaysToSpreadsheetItems } from '@/adapters/birthdayAdapter'
 import { contactsToSpreadsheetItems } from '@/adapters/contactAdapter'
 import { recipesToSpreadsheetItems } from '@/adapters/recipeAdapter'
 import { groupedTradesToSpreadsheetItems } from '@/adapters/tradingAdapter'
+import { meetingsToSpreadsheetItems } from '@/adapters/meetingAdapter'
 import SpreadsheetList from '@/components/unified/SpreadsheetList'
 import { Squares2X2Icon } from '@heroicons/react/24/outline'
 
@@ -24,12 +26,14 @@ export default function UnifiedHome() {
   const [taskItems, setTaskItems] = useState<SpreadsheetItem[]>([])
   const [tradingItems, setTradingItems] = useState<SpreadsheetItem[]>([])
   const [recipeItems, setRecipeItems] = useState<SpreadsheetItem[]>([])
+  const [meetingItems, setMeetingItems] = useState<SpreadsheetItem[]>([])
   const [loading, setLoading] = useState(true)
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     birthdays: false,
     contacts: false,
     tasks: false,
+    meetings: false,
     trading: false,
     recipes: false,
   })
@@ -43,11 +47,12 @@ export default function UnifiedHome() {
       setLoading(true)
 
       // Fetch all data in parallel
-      const [tasks, contacts, recipes, trades] = await Promise.all([
+      const [tasks, contacts, recipes, trades, meetings] = await Promise.all([
         PersonalTaskService.getAll({ status: 'todo' }),
         ContactService.getAll(),
         RecipeService.getAll(),
         TradingService.getAllTrades(MOCK_USER_ID),
+        MeetingService.getAll({ limit: 50 }), // Get all recent meetings (including Granola)
       ])
 
       // Convert to spreadsheet items
@@ -56,6 +61,7 @@ export default function UnifiedHome() {
       const todoTasks = tasksToSpreadsheetItems(tasks)
       const openTrades = groupedTradesToSpreadsheetItems(trades.filter(t => t.status === 'OPEN'))
       const allRecipes = recipesToSpreadsheetItems(recipes)
+      const recentMeetings = meetingsToSpreadsheetItems(meetings)
 
       // Sort each group by due date/name
       const sortByDueDate = (items: SpreadsheetItem[]) => {
@@ -72,6 +78,7 @@ export default function UnifiedHome() {
       setBirthdayItems(sortByDueDate([...birthdays]))
       setContactItems(sortByDueDate([...contactsNeedingOutreach]))
       setTaskItems(sortByDueDate([...todoTasks]))
+      setMeetingItems(sortByDueDate([...recentMeetings]))
       setTradingItems(sortByDueDate([...openTrades]))
       setRecipeItems(allRecipes.sort((a, b) => a.name.localeCompare(b.name)))
     } catch (error) {
@@ -130,11 +137,14 @@ export default function UnifiedHome() {
       const contact = item.metadata as Contact
       window.location.href = `/contacts/${contact.id}`
     } else if (item.type === 'reminder') {
-      // Check if it's a trade or recipe
+      // Check if it's a trade, recipe, or meeting
       const metadata = item.metadata as any
       if (metadata.ticker_symbol) {
         // It's a trade - navigate to trading page
         window.location.href = '/trading'
+      } else if (metadata.summary && metadata.source) {
+        // It's a meeting - navigate to meetings page
+        window.location.href = '/meetings'
       } else {
         // It's a recipe
         const recipe = item.metadata as PersonalRecipe
@@ -173,6 +183,13 @@ export default function UnifiedHome() {
       emoji: '✅',
       items: taskItems,
       color: 'bg-green-50 border-green-200',
+    },
+    {
+      key: 'meetings',
+      title: 'Meetings',
+      emoji: '📅',
+      items: meetingItems,
+      color: 'bg-indigo-50 border-indigo-200',
     },
     {
       key: 'trading',
@@ -244,7 +261,7 @@ export default function UnifiedHome() {
           )
         })}
 
-        {birthdayItems.length === 0 && contactItems.length === 0 && taskItems.length === 0 && tradingItems.length === 0 && recipeItems.length === 0 && (
+        {birthdayItems.length === 0 && contactItems.length === 0 && taskItems.length === 0 && meetingItems.length === 0 && tradingItems.length === 0 && recipeItems.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 text-gray-500">
             <Squares2X2Icon className="h-12 w-12 mb-4" />
             <p className="text-lg font-medium">All Clear!</p>

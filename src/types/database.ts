@@ -493,6 +493,22 @@ export type PersonalEncounter = {
 export type CreatePersonalEncounterInput = Omit<PersonalEncounter, 'id' | 'created_at' | 'updated_at' | 'created_by'>
 export type UpdatePersonalEncounterInput = Partial<CreatePersonalEncounterInput>
 
+// Meetings Types (Granola-synced meetings)
+export type Meeting = {
+  id: string
+  summary: string // Meeting title
+  start_time: string // Meeting start timestamp
+  end_time: string // Meeting end timestamp
+  source: string // e.g., 'granola_mcp' for Granola meetings
+  calendar_id: string // e.g., 'granola' for Granola meetings
+  event_id: string // Unique identifier (format: granola_{document_id})
+  status: string // e.g., 'confirmed'
+  attendees?: any[] // JSON array of attendees
+  description?: string // Meeting description
+  created_at: string
+  updated_at: string
+}
+
 // Telegram Bot Types
 export type TelegramUser = {
   id: string
