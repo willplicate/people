@@ -14,7 +14,7 @@ export class MeetingService {
     let query = supabase
       .from(TABLES.MEETINGS)
       .select('*')
-      .order('start_time', { ascending: false })
+      .order('start_time', { ascending: false }) // Most recent first
 
     // Filter by source
     if (options?.source) {
