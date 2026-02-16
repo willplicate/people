@@ -319,41 +319,67 @@ export default function UnifiedHome() {
                           {/* Expanded Meeting Details */}
                           {isExpanded && (
                             <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
-                              {/* Debug: Show all available fields */}
-                              <details className="mb-4">
-                                <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
-                                  Debug: Show all fields
-                                </summary>
-                                <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-                                  {JSON.stringify(meeting, null, 2)}
-                                </pre>
-                              </details>
+                              {(() => {
+                                // Extract document ID from description or event_id
+                                const documentId = meeting.event_id?.replace('granola_', '') ||
+                                                  meeting.description?.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/)?.[0]
 
-                              {meeting.description ? (
-                                <div className="text-sm text-gray-700 whitespace-pre-wrap">
-                                  <div className="font-medium text-gray-900 mb-2">Meeting Notes:</div>
-                                  {meeting.description}
-                                </div>
-                              ) : (
-                                <div className="text-sm text-gray-500 italic">
-                                  No notes available for this meeting.
-                                </div>
-                              )}
-                              <div className="mt-3 text-xs text-gray-500">
-                                <div>
-                                  <span className="font-medium">Start:</span>{' '}
-                                  {new Date(meeting.start_time).toLocaleString()}
-                                </div>
-                                <div>
-                                  <span className="font-medium">End:</span>{' '}
-                                  {new Date(meeting.end_time).toLocaleString()}
-                                </div>
-                                {meeting.calendar_id && (
-                                  <div>
-                                    <span className="font-medium">Calendar:</span> {meeting.calendar_id}
-                                  </div>
-                                )}
-                              </div>
+                                // Try to find notes in various possible fields
+                                const notes = meeting.notes || meeting.content || meeting.transcript ||
+                                            meeting.ai_summary || meeting.body || meeting.text
+
+                                return (
+                                  <>
+                                    {notes ? (
+                                      <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                                        <div className="font-medium text-gray-900 mb-2">Meeting Notes:</div>
+                                        {notes}
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        <div className="text-sm text-gray-500 italic">
+                                          Meeting notes are not synced to the database yet.
+                                        </div>
+                                        {documentId && (
+                                          <div className="text-xs text-gray-400">
+                                            <div className="font-medium mb-1">To sync notes:</div>
+                                            <div>Granola Document ID: <code className="bg-white px-1 py-0.5 rounded">{documentId}</code></div>
+                                            <div className="mt-2">
+                                              Notes need to be fetched from Granola MCP and stored in the database.
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                                      <div>
+                                        <span className="font-medium">Start:</span>{' '}
+                                        {new Date(meeting.start_time).toLocaleString()}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">End:</span>{' '}
+                                        {new Date(meeting.end_time).toLocaleString()}
+                                      </div>
+                                      {meeting.calendar_id && (
+                                        <div>
+                                          <span className="font-medium">Calendar:</span> {meeting.calendar_id}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Debug: Show all available fields */}
+                                    <details className="mt-3 pt-3 border-t border-gray-200">
+                                      <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
+                                        Debug: Show all fields
+                                      </summary>
+                                      <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-auto max-h-40">
+                                        {JSON.stringify(meeting, null, 2)}
+                                      </pre>
+                                    </details>
+                                  </>
+                                )
+                              })()}
                             </div>
                           )}
                         </div>
