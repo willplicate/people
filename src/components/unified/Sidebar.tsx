@@ -8,7 +8,8 @@ import {
   CakeIcon,
   BellIcon,
   CheckCircleIcon,
-  CurrencyDollarIcon
+  CurrencyDollarIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline'
 
 interface SidebarProps {
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Birthdays', href: '/unified/birthdays', icon: CakeIcon },
   { name: 'Reminders', href: '/unified/reminders', icon: BellIcon },
   { name: 'Tasks', href: '/unified/tasks', icon: CheckCircleIcon },
+  { name: 'Meetings', href: '/unified/meetings', icon: CalendarDaysIcon },
   { name: 'Trading', href: '/unified/trading', icon: CurrencyDollarIcon },
 ]
 
